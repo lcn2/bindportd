@@ -1,19 +1,20 @@
 #!/usr/bin/perl -wT
 #
-# holdport - hold ports so that they cannot be used
+# bindport - bind to tcp or udp ports
 #
 # usage:
-#	holdport [-b] [-v] proto/port ...
+#	bindport [-b] [-v] [-w] proto/port ...
 #
 #	-b	block all signals
 #	-v	verbose
+#	-w	wait forever
 #
 #	proto	tcp or udp
 #	port	port number or name
 #
-# @(#) $Revision$
-# @(#) $Id$
-# @(#) $Source$
+# @(#) $Revision: 1.1 $
+# @(#) $Id: holdport.pl,v 1.1 2000/02/04 09:49:57 chongo Exp chongo $
+# @(#) $Source: /usr/local/src/etc/holdport/RCS/holdport.pl,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -45,7 +46,7 @@ use strict;
 use Socket;
 use IO::Socket;
 use Getopt::Std;
-use vars qw($opt_b $opt_v);
+use vars qw($opt_b $opt_v $opt_w);
 
 # my vars
 #
@@ -54,17 +55,14 @@ my @sock;	# socket objects
 my $tcp;	# tcp protocol number
 my $udp;	# udp protocol number
 #
-my $usage = "usage: $0 [-b] [-v] {tcp|udp}/{portnum|portname} ...\n";
+my $usage = "usage: $0 [-b] [-v] [-w] {tcp|udp}/{portnum|portname} ...\n";
 
 MAIN:
 {
-    my $proto_arg;	# protocol ("tcp" | "udp") part of the arg
-    my $proto;		# protocol ("tcp" | "udp")
+    my $proto_arg;	# protocol name ("tcp" or "udp")
+    my $proto;		# protocol number (tcp(6) or udp(17))
     my $port_arg;	# port name/number part of the arg
-    my $port;		# port number
-    my $port_name;	# name of port number
     my $type;		# socket type (SOCK_STREAM | SOCK_DGRAM)
-    my $s;		# socket object
     my $i;
 
     # setup
@@ -78,7 +76,7 @@ MAIN:
 
     # parse args
     #
-    if (!getopts('bv') || !defined($ARGV[0])) {
+    if (!getopts('bvw') || !defined($ARGV[0])) {
 	die $usage;
     }
 
@@ -109,30 +107,9 @@ MAIN:
 	    $type = SOCK_DGRAM;
 	}
 
-	# determine port number
+	# hold the port
 	#
-	if ($port_arg =~ /^\d+$/) {
-	    $port = $port_arg;
-	    $port_name = scalar(getservbyport($port_arg,$proto_arg));
-	} else {
-	    $port_name = $port_arg;
-	    $port = scalar(getservbyname($port_arg,$proto_arg));
-	    if (!defined $port) {
-		print STDERR "$0: unknown proto/port: $ARGV[$i]\n";
-		die $usage;
-	    }
-	}
-	if (defined $port_name) {
-	    $port_name = "$port_name($port)";
-	} else {
-	    $port_name = "$port";
-	}
-
-	# bind to the port
-	#
-	$s = &bind_port($type, $proto, $proto_arg, $port, $port_name);
-	push(@sock, $s);
-	print "holding $proto_arg/$port_name\n" if defined $opt_v;
+	push(@sock, &hold_port($type, $proto, $proto_arg, $port_arg));
     }
 
     # turn off signals
@@ -143,11 +120,20 @@ MAIN:
 	print "\n" if defined $opt_v;
     }
 
-    # sleep forever
+    # sleep forever if requested
     #
-    print "waiting forever ..." if defined $opt_v;
-    select undef, undef, undef, undef;
-    die "select forever ended!\n";
+    if (defined $opt_w) {
+	print "waiting forever ..." if defined $opt_v;
+	select undef, undef, undef, undef;
+	die "select forever ended!\n";
+    }
+
+    # all done
+    #
+    for ($i=0; $i < scalar(@sock); ++$i) {
+	$sock[$i]->close();
+    }
+    exit(0);
 }
 
 
@@ -158,6 +144,55 @@ sub sig_off()
     for my $sig (keys %SIG) {
 	$SIG{$sig} = 'IGNORE';
     }
+}
+
+
+# hold_port - hold a port by binding to it
+#
+# usage:
+#	&hold_port($type, $proto, $proto_arg, $port);
+#
+#	$type		socket type (SOCK_STREAM | SOCK_DGRAM)
+#	$proto		protocol number (tcp(6) or udp(17))
+#	$proto_arg	protocol name ("tcp" or "udp")
+#	$port_arg	port number or name
+#
+# returns:
+#	IO::Socket::INET object
+#
+# NOTE: The $proto_arg is used for error message output only.
+#
+sub hold_port()
+{
+    my ($type, $proto, $proto_arg, $port_arg) = @_;		# get args 
+    my $port_name;	# port name (number or name(number))
+    my $port;		# port number
+    my $s;		# socket object
+
+    # determine port name(number)
+    #
+    if ($port_arg =~ /^\d+$/) {
+	$port = $port_arg;
+	$port_name = scalar(getservbyport($port_arg,$proto_arg));
+    } else {
+	$port_name = $port_arg;
+	$port = scalar(getservbyname($port_arg,$proto_arg));
+	if (!defined $port) {
+	    print STDERR "$0: unknown proto/port: $proto_arg/$port_arg\n";
+	    die $usage;
+	}
+    }
+    if (defined $port_name) {
+	$port_name = "$port_name($port)";
+    } else {
+	$port_name = "$port";
+    }
+
+    # bind to the port
+    #
+    $s = &bind_port($type, $proto, $proto_arg, $port, $port_name);
+    print "holding $proto_arg/$port_name\n" if defined $opt_v;
+    return $s;
 }
 
 
