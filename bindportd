@@ -16,8 +16,8 @@
 #	proto	tcp or udp
 #	port	port number or port number:range or port name
 #
-# @(#) $Revision: 1.8 $
-# @(#) $Id: bindport,v 1.8 2000/02/11 07:05:58 chongo Exp root $
+# @(#) $Revision: 1.9 $
+# @(#) $Id: bindport,v 1.9 2000/02/13 03:07:17 root Exp chongo $
 # @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
@@ -27,10 +27,10 @@
 # provided that the above copyright, this permission notice and text
 # this comment, and the disclaimer below appear in all of the following:
 #
-#       supporting documentation
-#       source copies
-#       source works derived from this source
-#       binaries derived from this source or from derived source
+#	supporting documentation
+#	source copies
+#	source works derived from this source
+#	binaries derived from this source or from derived source
 #
 # LANDON CURT NOLL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 # INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO
@@ -65,7 +65,7 @@
 # It is perfectly reasonable for a program to use almost any random unused
 # privileged port.  In fact there are facilities where an application
 # will ask for any random, unprivileged and unused port on which to listen
-# or make connections.  Such applications have no way of knowing that the
+# or make connections.	Such applications have no way of knowing that the
 # router/packet filter/ipchain will block them.
 #
 # WARNING: The above port list may not be complete.  It may also contain
@@ -81,7 +81,7 @@
 #	fi
 #
 # The program will exit 0 if it was able to bind and close all of the
-# ports successfully.  Otherwise it will exit non-zero.  By using -c,
+# ports successfully.  Otherwise it will exit non-zero.	 By using -c,
 # one ensures that no error messages will be printed.  Of course, doing:
 #
 #    if /usr/local/etc/bindport udp/23023 2>/dev/null; then echo it is free; fi
@@ -112,10 +112,12 @@ my $usage = "usage:\n" .
 	    "\t-b\trun in background after binding to all ports\n" .
 	    "\t-c\tpre-close all files (except STDOUT/STDERR if also -v)\n" .
 	    "\t-h\tprint this usage message\n" .
-	    "\t-i\tsilently ignore privileged ports (port <= 1023)" .
+	    "\t-i\tsilently ignore privileged ports (0 <= port <= 1023)\n" .
 	    "\t-s\tblock all blockable signals\n" .
 	    "\t-v\tverbose\n" .
-	    "\t-w\twait forever\n";
+	    "\t-w\twait forever\n" .
+	    "\n" .
+	    "\tport numbers must be in the range [0,65535]\n";
 
 MAIN:
 {
@@ -207,6 +209,10 @@ MAIN:
 		$low_port = $2;
 		$high_port = $1;
 	    }
+	    if ($low_port < 0 || $high_port >= 65536) {
+		print STDERR "$0: port number range must be over [0,65535]\n";
+		die $usage;
+	    }
 
 	    # hold each port in the range
 	    #
@@ -217,8 +223,12 @@ MAIN:
 	# or hold a single port
 	#
 	} else {
+	    if ($port_arg < 0 || $port_arg >= 65536) {
+		print STDERR "$0: port number must in the range [0,65535]\n";
+		die $usage;
+	    }
 	    push(@sock, &hold_port($proto_arg, $port_arg));
-    	}
+	}
     }
 
     # fork in background if -b
