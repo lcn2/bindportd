@@ -1,0 +1,204 @@
+#!/usr/bin/perl -wT
+#
+# holdport - hold ports so that they cannot be used
+#
+# usage:
+#	holdport [-b] [-v] proto/port ...
+#
+#	-b	block all signals
+#	-v	verbose
+#
+#	proto	tcp or udp
+#	port	port number or name
+#
+# @(#) $Revision$
+# @(#) $Id$
+# @(#) $Source$
+#
+# Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
+#
+# Permission to use, copy, modify, and distribute this software and
+# its documentation for any purpose and without fee is hereby granted,
+# provided that the above copyright, this permission notice and text
+# this comment, and the disclaimer below appear in all of the following:
+#
+#       supporting documentation
+#       source copies
+#       source works derived from this source
+#       binaries derived from this source or from derived source
+#
+# LANDON CURT NOLL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO
+# EVENT SHALL LANDON CURT NOLL BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+# USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+# OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+#
+# chongo <was here> /\oo/\
+#
+# Share and enjoy!
+
+# requirements
+#
+use strict;
+use Socket;
+use IO::Socket;
+use Getopt::Std;
+use vars qw($opt_b $opt_v);
+
+# my vars
+#
+my @sock;	# socket objects
+#
+my $tcp;	# tcp protocol number
+my $udp;	# udp protocol number
+#
+my $usage = "usage: $0 [-b] [-v] {tcp|udp}/{portnum|portname} ...\n";
+
+MAIN:
+{
+    my $proto_arg;	# protocol ("tcp" | "udp") part of the arg
+    my $proto;		# protocol ("tcp" | "udp")
+    my $port_arg;	# port name/number part of the arg
+    my $port;		# port number
+    my $port_name;	# name of port number
+    my $type;		# socket type (SOCK_STREAM | SOCK_DGRAM)
+    my $s;		# socket object
+    my $i;
+
+    # setup
+    #
+    select STDOUT;
+    $| = 1;
+    (undef, undef, $tcp) = getprotobyname("tcp");
+    die "$0: cannot determine tcp protocol number\n" unless defined $tcp;
+    (undef, undef, $udp) = getprotobyname("udp");
+    die "$0: cannot determine udp protocol number\n" unless defined $udp;
+
+    # parse args
+    #
+    if (!getopts('bv') || !defined($ARGV[0])) {
+	die $usage;
+    }
+
+    # form sockets for each arg
+    #
+    for ($i=0; $i < scalar(@ARGV); ++$i) {
+
+	# check arg syntax
+	#
+	if ($ARGV[$i] !~ m#^(tcp|udp)/(.*)$#) {
+	    print STDERR "$0: $ARGV[$i]: does not start with tcp/ or udp/\n";
+	    die $usage;
+	}
+	$proto_arg = $1;
+	$port_arg = $2;
+	if (! defined($port_arg) || $port_arg eq "") {
+	    print STDERR "$0: $ARGV[$i]: must end with :portname or :portnum\n";
+	    die $usage;
+	}
+
+	# setup parameters based on TCP or UDP
+	#
+	if ($proto_arg eq "tcp") {
+	    $proto = $tcp;
+	    $type = SOCK_STREAM;
+	} else {
+	    $proto = $udp;
+	    $type = SOCK_DGRAM;
+	}
+
+	# determine port number
+	#
+	if ($port_arg =~ /^\d+$/) {
+	    $port = $port_arg;
+	    $port_name = scalar(getservbyport($port_arg,$proto_arg));
+	} else {
+	    $port_name = $port_arg;
+	    $port = scalar(getservbyname($port_arg,$proto_arg));
+	    if (!defined $port) {
+		print STDERR "$0: unknown proto/port: $ARGV[$i]\n";
+		die $usage;
+	    }
+	}
+	if (defined $port_name) {
+	    $port_name = "$port_name($port)";
+	} else {
+	    $port_name = "$port";
+	}
+
+	# bind to the port
+	#
+	$s = &bind_port($type, $proto, $proto_arg, $port, $port_name);
+	push(@sock, $s);
+	print "holding $proto_arg/$port_name\n" if defined $opt_v;
+    }
+
+    # turn off signals
+    #
+    if (defined $opt_b) {
+	print "ignoring almost all signals..." if defined $opt_v;
+	&sig_off();
+	print "\n" if defined $opt_v;
+    }
+
+    # sleep forever
+    #
+    print "waiting forever ..." if defined $opt_v;
+    select undef, undef, undef, undef;
+    die "select forever ended!\n";
+}
+
+
+# sig_off - turn off all signals (that we can)
+#
+sub sig_off()
+{
+    for my $sig (keys %SIG) {
+	$SIG{$sig} = 'IGNORE';
+    }
+}
+
+
+# bind_port - bind a port by binding to it
+#
+# usage:
+#	$s = &bind_port($type, $proto, $proto_arg, $port, $port_name);
+#
+#	$type		socket type (SOCK_STREAM | SOCK_DGRAM)
+#	$proto		protocol number
+#	$proto_arg	protocol name ("tcp" or "udp")
+#	$port		port number
+#	$port_name	port name (either number or name(number))
+#
+# returns:
+#	IO::Socket::INET object
+#
+# NOTE: The $proto_arg and $port_name are used for error message output only.
+#
+sub bind_port($$$)
+{
+    my ($type, $proto, $proto_arg, $port, $port_name) = @_;	# get args 
+    my $s;	# socket object
+
+    # construct a socket object
+    #
+    $s = IO::Socket::INET->new();
+    if (! defined($s)) {
+	die "$0: failed to form the socket object\n";
+    }
+    if (! $s->socket(PF_INET, $type, $proto)) {
+	die "$0: cannot create $proto_arg socket: $!\n";
+    }
+
+    # bind the socket
+    #
+    if (! $s->bind($port, INADDR_ANY)) {
+	die "$0: cannot bind to $port_name: $!\n";
+    }
+
+    # save the socket
+    #
+    return $s;
+}
