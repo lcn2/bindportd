@@ -3,24 +3,32 @@
 # bindport - bind to tcp or udp ports
 #
 # usage:
-#	bindport [-b] [-c] [-h] [-i] [-s] [-v] [-w] proto/port ...
+#	bindport [-b] [-c] [-h] [-i] [-s] [-v] [-w] portset
 #
-#	-b	run in background after binding to ports
+#	-b	(ignored, always forks into background)
 #	-c	pre-close all open files (except STDOUT/STDERR if also -v)
 #	-h	print a usage message
 #	-i	silently ignore binding to privileged ports (port <= 1023)
 #	-s	block all blockable signals
-#	-w	wait forever
+#	-w	(ignored, forked children always wait forever after binding)
 #	-v	verbose
+#	portset	(see below)
 #
-#	proto	tcp or udp
-#	port	port number or port number:range or port name
+# The port.set file contains lines of the form:
 #
-# @(#) $Revision: 1.11 $
-# @(#) $Id: bindport,v 1.11 2000/10/05 00:27:24 chongo Exp root $
+#	# comment are ignored
+#	# blank lines are ignored
+#
+#	proto/port	# comments on the end of a line are ignored
+#
+#	proto	tcp, udp, reserve-tcp, reserve-udp
+#	port	port number
+#
+# @(#) $Revision: 1.12 $
+# @(#) $Id: bindport,v 1.12 2001/02/12 08:28:06 root Exp chongo $
 # @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
 #
-# Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
+# Copyright (c) 2000-2004 by Landon Curt Noll.  All Rights Reserved.
 #
 # Permission to use, copy, modify, and distribute this software and
 # its documentation for any purpose and without fee is hereby granted,
@@ -46,10 +54,7 @@
 
 # NOTE: Executing the following command:
 #
-#	bindport -b -c -s -w udp/socks udp/2049 udp/2140 \
-#			     udp/5632 udp/31337 udp/31789 udp/31790 udp/60000 \
-#			     tcp/socks tcp/1114 tcp/1243 \
-#			     tcp/2000 tcp/2049 tcp/12345-12346 tcp/20034
+#	bindport -c -s -n /etc/sysconfig/bindport
 #
 # right after the network is started (see /etc/rc.d/init.d/network) is useful
 # as it grabs and holds on to ports that are often the subject of system
@@ -72,21 +77,9 @@
 #	   services that you want to use (such as socks).  Just the command
 #	   to suit your needs and current network attacks.
 
-# NOTE: To test if some ports are in use, try:
-#
-#	if /usr/local/etc/bindport -c tcp/3000 udp/3000; then
-#	    echo ports not being used
-#	else
-#	    echo some of the ports are in use
-#	fi
-#
 # The program will exit 0 if it was able to bind and close all of the
 # ports successfully.  Otherwise it will exit non-zero.	 By using -c,
-# one ensures that no error messages will be printed.  Of course, doing:
-#
-#    if /usr/local/etc/bindport udp/23023 2>/dev/null; then echo it is free; fi
-#
-# will also work without forcing the pre-close of files.
+# one ensures that no error messages will be printed.
 
 
 # requirements
@@ -94,82 +87,179 @@
 use strict;
 use Socket;
 use IO::Socket;
+use IO::Handle;
 use Getopt::Std;
 use POSIX;
-use vars qw($opt_b $opt_c $opt_h $opt_i $opt_s $opt_v $opt_w);
+use vars qw($opt_b $opt_c $opt_h $opt_i $opt_s $opt_v $opt_w $opt_m);
 
 # my vars
 #
 my @sock;	# socket objects
-#
-my $tcp;	# tcp protocol number
-my $udp;	# udp protocol number
+my $max_ports;	# max number of ports to bind per child
 #
 my $usage = "usage:\n" .
-	    "$0 [-b] [-c] [-h] [-i] [-s] [-v] [-w] " .
-	    "{tcp|udp}/{number|port:range|name} ...\n" .
-	    "\n" .
-	    "\t-b\trun in background after binding to all ports\n" .
-	    "\t-c\tpre-close all files (except STDOUT/STDERR if also -v)\n" .
-	    "\t-h\tprint this usage message\n" .
-	    "\t-i\tsilently ignore privileged ports (0 <= port <= 1023)\n" .
-	    "\t-s\tblock all blockable signals\n" .
-	    "\t-v\tverbose\n" .
-	    "\t-w\twait forever\n" .
-	    "\n" .
-	    "\tport numbers must be in the range [0,65535]\n";
+	"$0 [-b] [-c] [-h] [-i] [-m maxport] [-s] [-v] [-w] portset" .
+	"\n" .
+	"\t-b\t(option ignored, always forks in background)\n" .
+	"\t-c\tclose open files after startup (except STDOUT/STDERR if -v)\n" .
+	"\t-h\tprint this usage message\n" .
+	"\t-i\tsilently ignore privileged ports (0 <= port <= 1023)\n" .
+	"\t-m\tmax ports per child (default: 1000)\n" .
+	"\t-s\tblock all blockable signals\n" .
+	"\t-v\tverbose\n" .
+	"\t-w\t(ignored, forked children always wait forever after binding)\n" .
+	"\n" .
+	"    portset is a file containing lines of the form:\n" .
+	"\n" .
+	"\t# comment ignored\n" .
+	"\t# empty line ignored\n" .
+	"\n" .
+	"\tudp/portnum\t\t# comment ignored\n" .
+	"\ttcp/portnum\t\t# comment ignored\n" .
+	"\treserve-udp/portnum\t# comment ignored\n" .
+	"\treserve-tcp/portnum\t# comment ignored\n" .
+	"\twhere portnum is an integer [0,65535]\n" .
+	"\tonly udp/portnum and tcp/portnum lines result in port binding\n";
 
 # function prototypes
 #
 sub sig_off();
 sub hold_port($$);
-sub bind_port($$$$$);
 
 
 MAIN:
 {
-    my $proto_arg;	# protocol name ("tcp" or "udp")
-    my $port_arg;	# port name/number part of the arg
-    my $max_ports;	# maximum number of ports we can open
+    my $proto_arg;	# "tcp", "udp", "reserve-udp", or "reserve-tcp"
+    my $port;		# port number
+    my $line;		# a line from the bindport configuration file
+    my $max_ports;	# maximum number of ports we can open per process
+    my $total_ports;	# total ports (udp and tcp) to bind with
+    my $child_ports;	# number of ports to be given to the child
+    my $ignored_tcp;	# number of ignored tcp ports due to -i
+    my $ignored_udp;	# number of ignored udp ports due to -i
+    my %tcp;		# tcp ports to block
+    my %udp;		# udp ports to block
+    my %reserve_tcp;	# tcp ports to reserve (not block)
+    my %reserve_udp;	# udp ports to reserve (not block)
+    my @tcp_set;	# tcp forks for the child to bind with
+    my @udp_set;	# udp forks for the child to bind with
+    my $cfgfile;	# bindport configuration file
+    my $pid;		# parent => child pid, child => 0
     my $i;
 
     # setup
     #
-    (undef, undef, $tcp) = getprotobyname("tcp");
-    die "$0: cannot determine tcp protocol number\n" unless defined $tcp;
-    (undef, undef, $udp) = getprotobyname("udp");
-    die "$0: cannot determine udp protocol number\n" unless defined $udp;
+    $max_ports = 1000;	# most Linux systems can open 1024 files per process
 
     # parse args
     #
-    if (!getopts('bchisvw') || !defined($ARGV[0])) {
+    if (!getopts('bchim:svw') || !defined($ARGV[0]) || defined($ARGV[1])) {
 	die $usage;
     }
+    $cfgfile = $ARGV[0];
     if (defined $opt_h) {
 	print $usage;
 	exit 0;
+    }
+    if (defined($opt_m)) {
+    	if ($opt_m < 1) {
+	    die "max ports must be > 0\n";
+	} else {
+	    $max_ports = $opt_m;
+	}
     }
     if (defined $opt_v) {
 	select STDOUT;
 	$| = 1;
     }
 
-    # check for too many args
+    # parse the bindport file
     #
-    # XXX - This does count correctly because we can have a port
-    #	    range (as a single argument) which opens multiple ports.
-    #
-    $max_ports = 253;
-    if (defined $opt_c) {
-	++$max_ports;
-	++$max_ports unless defined $opt_v;
-	++$max_ports unless defined $opt_v;
+    if (! open BINDPORT, "<$cfgfile") {
+	die "cannot open bindport config file: $cfgfile: $!\n";
     }
-    if (@ARGV > $max_ports) {
-	# XXX - instead of exiting, we should fork multiple copies
-	#	to deal with an excess number of args
+    $i = 0;
+    $ignored_tcp = 0;
+    $ignored_udp = 0;
+    while (defined($line = <BINDPORT>)) {
+
+    	# ignore off comments and whitespace
 	#
-	die "too many args";
+	++$i;
+	chomp($line);
+	$line =~ s/#.*//;
+	$line =~ s/\s+$//;
+	next if length($line) <= 0;
+
+	# must be of the form {udp,tcp,reserve-udp,reserve-tcp}/portnum
+	#
+	if ($line !~ m{^(tcp|udp|reserve-udp|reserve-tcp)/(\d+)$}) {
+	    die "syntax error on line: $i, see $0 -h for syntax\n";
+	}
+	$proto_arg = $1;
+	if (! defined $proto_arg) {
+	    die "syntax error on line: $i, unknown port type\n";
+	}
+	$port = $2;
+	if (! defined $port || $port < 0 || $port > 65535) {
+	    die "syntax error on line: $i, port must be in range [0,65535]\n";
+	}
+
+	# if -i, then silently ignore privileged ports <= 1023
+	#
+	if ($opt_i && $port <= 1023) {
+	    if ($proto_arg =~ m{^tcp$}i) {
+		++$ignored_tcp;
+	    } elsif ($proto_arg =~ m{^udp$}i) {
+		++$ignored_udp;
+	    }
+	    next;
+	}
+
+	# record entry
+	#
+	if ($proto_arg =~ m{^tcp$}i) {
+	    $tcp{$port} = $port;
+	} elsif ($proto_arg =~ m{^udp$}i) {
+	    $udp{$port} = $port;
+	} elsif ($proto_arg =~ m{^reserve-tcp$}i) {
+	    $reserve_tcp{$port} = $port;
+	} elsif ($proto_arg =~ m{^reserve-udp$}i) {
+	    $reserve_udp{$port} = $port;
+	} else {
+	    die "unknown port time on line: $i\n";
+	}
+    }
+    close BINDPORT;
+
+    # object if attempting to bind to reserve ports
+    #
+    foreach $port (keys %reserve_tcp) {
+	if (defined($tcp{$port})) {
+	    die "found both tcp/$port and reserve-tcp/$port\n";
+	}
+    }
+    foreach $port (keys %reserve_udp) {
+	if (defined($udp{$port})) {
+	    die "found both udp/$port and reserve-udp/$port\n";
+	}
+    }
+    print "$0: " . (keys %tcp) . " tcp ports to bind\n" if defined $opt_v;
+    print "$0: " . (keys %udp) . " udp ports to bind\n" if defined $opt_v;
+    if ($opt_i) {
+	print "$0: $ignored_tcp low tcp ports ignored\n" if defined $opt_v;
+	print "$0: $ignored_udp low udp ports ignored\n" if defined $opt_v;
+    }
+    $total_ports = (keys %tcp) + (keys %udp);
+    print "$0: will bind to $total_ports ports\n" if defined $opt_v;
+    print "$0: each child bind up to $max_ports ports\n" if defined $opt_v;
+
+    # turn off signals
+    #
+    if (defined $opt_s) {
+	print "$0: ignoring almost all signals..." if defined $opt_v;
+	sig_off();
+	print "\n" if defined $opt_v;
     }
 
     # pre-close all files if requested
@@ -180,106 +270,109 @@ MAIN:
 	#
 	# We do not close STDOUT and STDERR if we also were given -v
 	#
+	print "$0: closing STDIN and fd 3 thru fd $max_ports\n" if $opt_v;
 	POSIX::close(0);
 	POSIX::close(1) unless defined $opt_v;
 	POSIX::close(2) unless defined $opt_v;
 
 	# close from 3 upward
 	#
-	print "closing STDIN and file 3 thru file 256\n" if $opt_v;
-	for ($i=3; $i < 256; ++$i) {
+	for ($i=3; $i < $max_ports; ++$i) {
 	    POSIX::close($i);
 	}
     }
 
-    # turn off signals
+    # fork processes while we have ports to bind with
     #
-    if (defined $opt_s) {
-	print "ignoring almost all signals..." if defined $opt_v;
-	sig_off();
-	print "\n" if defined $opt_v;
-    }
+    while ($total_ports > 0) {
 
-    # form sockets for each arg
-    #
-    for ($i=0; $i < scalar(@ARGV); ++$i) {
-
-	# check arg syntax
+	# select any tcp ports for child binding use
 	#
-	if ($ARGV[$i] !~ m#^(tcp|udp)/(.*)$#) {
-	    print STDERR "$0: $ARGV[$i]: does not start with tcp/ or udp/\n";
-	    die $usage;
-	}
-	$proto_arg = $1;
-	$port_arg = $2;
-	if (! defined($port_arg) || $port_arg eq "") {
-	    print STDERR "$0: $ARGV[$i]: must end with ";
-	    print STDERR "/portname or /portnum or /port-range\n";
-	    die $usage;
-	}
+	@tcp_set = ();
+	$child_ports = 0;
+	if ((keys %tcp) > 0) {
 
-	# hold ports over a range
-	#
-	if ($port_arg =~ m#^(\d+):(\d+)$#) {
-
-	    my $low_port;	# low port number of a range
-	    my $high_port;	# high port number of a range
-	    my $port;
-
-	    # inspect the range
+	    # collect up to max_ports tcp ports for the child to bind with
 	    #
-	    if ($1 < $2) {
-		$low_port = $1;
-		$high_port = $2;
-	    } else {
-		$low_port = $2;
-		$high_port = $1;
-	    }
-	    if ($low_port < 0 || $high_port >= 65536) {
-		print STDERR "$0: port number range must be over [0,65535]\n";
-		die $usage;
-	    }
+	    foreach $port (keys %tcp) {
 
-	    # hold each port in the range
-	    #
-	    for ($port = $low_port; $port <= $high_port; ++$port) {
-		push(@sock, hold_port($proto_arg, $port));
-	    }
+		# if we more than enough ports for the child, stop collecting
+		#
+		last if ($child_ports >= $max_ports || $total_ports <= 0);
 
-	# or hold a single port
-	#
-	} else {
-	    if ($port_arg < 0 || $port_arg >= 65536) {
-		print STDERR "$0: port number must in the range [0,65535]\n";
-		die $usage;
+		# collect this port
+		#
+		push @tcp_set, $port;
+		--$total_ports;
+		++$child_ports;
+		delete $tcp{$port};
 	    }
-	    push(@sock, hold_port($proto_arg, $port_arg));
 	}
-    }
+	print "$0: child will get " . scalar(@tcp_set) . " tcp ports\n" if
+	    defined $opt_v;
 
-    # fork in background if -b
-    #
-    if (defined $opt_b) {
-	my $pid;	# parent => child pid, child => 0
+	# if the child has room, also select udp ports for child binding use
+	#
+	@udp_set = ();
+	if ((keys %udp) > 0 && $child_ports < $max_ports) {
 
+	    # collect up to max_ports udp ports for the child to bind with
+	    #
+	    foreach $port (keys %udp) {
+
+		# if we more than enough ports for the child, stop collecting
+		#
+		last if ($child_ports >= $max_ports || $total_ports <= 0);
+
+		# collect this port
+		#
+		push @udp_set, $port;
+		--$total_ports;
+		++$child_ports;
+		delete $udp{$port};
+	    }
+	}
+	print "$0: child will get " . scalar(@udp_set) . " udp ports\n" if
+	    defined $opt_v;
+	if (scalar(@tcp_set) + scalar(@udp_set) < 1) {
+	    die "attempt to give no ports to a child\n";
+	}
+
+	# fork child so it can bind to ports
+	#
 	$pid = fork;
 	die "$0: cannot fork: $!\n" unless defined($pid);
-	exit(0) if $pid;
+
+	# child code
+	#
+	if ($pid == 0) {
+
+	    # hold each tcp port
+	    #
+	    foreach $port (@tcp_set) {
+		push(@sock, hold_port("tcp", $port));
+	    }
+
+	    # hold each udp port
+	    #
+	    foreach $port (@udp_set) {
+		push(@sock, hold_port("udp", $port));
+	    }
+
+	    # sleep forever
+	    #
+	    select undef, undef, undef, undef;
+	    # /*NOTREACHED*/ #
+	}
+
+	# parent code
+	#
+	print "$0: forked child $pid, $total_ports left to bind\n" if
+	    defined $opt_v;
     }
 
-    # sleep forever if requested
+    # All done!!! - Jessica Noll, Age 2
     #
-    if (defined $opt_w) {
-	print "waiting forever ..." if defined $opt_v;
-	select undef, undef, undef, undef;
-	die "select forever ended!\n";
-    }
-
-    # all done
-    #
-    for ($i=0; $i < scalar(@sock); ++$i) {
-	$sock[$i]->close() if defined $sock[$i];
-    }
     exit(0);
 }
 
@@ -299,10 +392,10 @@ sub sig_off()
 # hold_port - hold a port by binding to it
 #
 # usage:
-#	$s = hold_port($proto_arg, $port);
+#	$s = hold_port($proto, $port);
 #
-#	$proto_arg	protocol name ("tcp" or "udp")
-#	$port_arg	port number or name
+#	$proto		socket proto ("tcp" or "udp")
+#	$port		port number
 #
 # returns:
 #	IO::Socket::INET object
@@ -311,94 +404,24 @@ sub sig_off()
 #
 sub hold_port($$)
 {
-    my ($proto_arg, $port_arg) = @_;		# get args
-    my $type;		# socket type (SOCK_STREAM | SOCK_DGRAM)
-    my $proto;		# protocol number (tcp(6) or udp(17))
-    my $port_name;	# port name (number or name(number))
-    my $port;		# port number
-    my $s;		# socket object
-
-    # setup parameters based on TCP or UDP
-    #
-    if ($proto_arg eq "tcp") {
-	$proto = $tcp;
-	$type = SOCK_STREAM;
-    } elsif ($proto_arg eq "udp") {
-	$proto = $udp;
-	$type = SOCK_DGRAM;
-    } else {
-	die "$0: protocol name is not tcp or ucp\n";
-    }
-
-    # determine port name(number)
-    #
-    if ($port_arg =~ /^\d+$/) {
-	$port = $port_arg;
-	$port_name = scalar(getservbyport($port_arg,$proto_arg));
-    } else {
-	$port_name = $port_arg;
-	$port = scalar(getservbyname($port_arg,$proto_arg));
-	if (!defined $port) {
-	    print STDERR "$0: unknown proto/port: $proto_arg/$port_arg\n";
-	    die $usage;
-	}
-    }
-    if (defined $port_name) {
-	$port_name = "$port_name($port)";
-    } else {
-	$port_name = "$port";
-    }
-
-    # if -i, then silently ignore prived ports <= 1023
-    #
-    if ($opt_i && $port <= 1023) {
-	print "ignoring $proto_arg/$port_name\n" if defined $opt_v;
-	return undef;
-    }
+    my ($proto, $port) = @_;	# get args
+    my $s;			# socket object
 
     # bind to the port
     #
-    $s = bind_port($type, $proto, $proto_arg, $port, $port_name);
-    print "holding $proto_arg/$port_name\n" if defined $opt_v;
-    return $s;
-}
-
-
-# bind_port - bind a port by binding to it
-#
-# usage:
-#	$s = bind_port($type, $proto, $proto_arg, $port, $port_name);
-#
-#	$type		socket type (SOCK_STREAM | SOCK_DGRAM)
-#	$proto		protocol number
-#	$proto_arg	protocol name ("tcp" or "udp")
-#	$port		port number
-#	$port_name	port name (either number or name(number))
-#
-# returns:
-#	IO::Socket::INET object
-#
-# NOTE: The $proto_arg and $port_name are used for error message output only.
-#
-sub bind_port($$$$$)
-{
-    my ($type, $proto, $proto_arg, $port, $port_name) = @_;	# get args
-    my $s;	# socket object
-
-    # construct a socket object
-    #
-    $s = IO::Socket::INET->new();
-    if (! defined($s)) {
-	die "$0: failed to form the socket object\n";
-    }
-    if (! $s->socket(PF_INET, $type, $proto)) {
-	die "$0: cannot create $proto_arg socket: $!\n";
-    }
-
-    # bind the socket
-    #
-    if (! $s->bind($port, INADDR_ANY)) {
-	die "$0: cannot bind to $port_name: $!\n";
+    if ($proto eq "tcp") {
+	$s = IO::Socket::INET->new(LocalPort => $port,
+				   Proto => $proto,
+				   Type => SOCK_STREAM,
+				   Listen => 1,
+				   Reuse => 1);
+    } elsif ($proto eq "udp") {
+	$s = IO::Socket::INET->new(LocalPort => $port,
+				   Proto => $proto,
+				   Type => SOCK_DGRAM,
+				   Reuse => 1);
+    } else {
+	die "$0: unknown protocol name: $proto\n";
     }
 
     # save the socket
