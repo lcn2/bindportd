@@ -1,9 +1,9 @@
 #!/usr/bin/perl -wT
 #
-# bindport - bind to tcp or udp ports
+# bindportd - bind to tcp or udp ports
 #
 # usage:
-#	bindport [-b] [-c] [-h] [-i] [-s] [-v] [-w] portset
+#	bindportd [-b] [-c] [-h] [-i] [-s] [-v] [-w] portset
 #
 #	-b	(ignored, always forks into background)
 #	-c	pre-close all open files (except STDOUT/STDERR if also -v)
@@ -24,8 +24,8 @@
 #	proto	tcp, udp, reserve-tcp, reserve-udp
 #	port	port number
 #
-# @(#) $Revision: 1.12 $
-# @(#) $Id: bindport,v 1.12 2001/02/12 08:28:06 root Exp chongo $
+# @(#) $Revision: 1.13 $
+# @(#) $Id: bindport,v 1.13 2004/03/04 04:51:32 chongo Exp chongo $
 # @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
 #
 # Copyright (c) 2000-2004 by Landon Curt Noll.  All Rights Reserved.
@@ -54,7 +54,7 @@
 
 # NOTE: Executing the following command:
 #
-#	bindport -c -s -n /etc/sysconfig/bindport
+#	bindportd -i -s /etc/sysconfig/bindport
 #
 # right after the network is started (see /etc/rc.d/init.d/network) is useful
 # as it grabs and holds on to ports that are often the subject of system

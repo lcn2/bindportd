@@ -1,10 +1,10 @@
 #!/bin/make
 #
-# bindport - bind to tcp or udp ports
+# bindportd - bind to tcp or udp ports
 #
-# @(#) $Revision$
-# @(#) $Id$
-# @(#) $Source$
+# @(#) $Revision: 1.1 $
+# @(#) $Id: Makefile,v 1.1 2000/02/04 11:33:40 chongo Exp chongo $
+# @(#) $Source: /usr/local/src/etc/bindportd/RCS/Makefile,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -34,10 +34,10 @@
 SHELL= /bin/sh
 DESTDIR= /usr/local/etc
 
-all: bindport
+all: bindportd
 
 install: all
-	install -m 0555 bindport ${DESTDIR}
+	install -m 0555 bindportd ${DESTDIR}
 
 clean:
 clobber:
