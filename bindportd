@@ -16,8 +16,8 @@
 #	proto	tcp or udp
 #	port	port number or port number:range or port name
 #
-# @(#) $Revision: 1.10 $
-# @(#) $Id: bindport,v 1.10 2000/03/10 17:53:54 chongo Exp chongo $
+# @(#) $Revision: 1.11 $
+# @(#) $Id: bindport,v 1.11 2000/10/05 00:27:24 chongo Exp root $
 # @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
@@ -130,6 +130,7 @@ MAIN:
 {
     my $proto_arg;	# protocol name ("tcp" or "udp")
     my $port_arg;	# port name/number part of the arg
+    my $max_ports;	# maximum number of ports we can open
     my $i;
 
     # setup
@@ -153,6 +154,24 @@ MAIN:
 	$| = 1;
     }
 
+    # check for too many args
+    #
+    # XXX - This does count correctly because we can have a port
+    #	    range (as a single argument) which opens multiple ports.
+    #
+    $max_ports = 253;
+    if (defined $opt_c) {
+	++$max_ports;
+	++$max_ports unless defined $opt_v;
+	++$max_ports unless defined $opt_v;
+    }
+    if (@ARGV > $max_ports) {
+	# XXX - instead of exiting, we should fork multiple copies
+	#	to deal with an excess number of args
+	#
+	die "too many args";
+    }
+
     # pre-close all files if requested
     #
     if (defined $opt_c) {
@@ -167,8 +186,8 @@ MAIN:
 
 	# close from 3 upward
 	#
-	print "closing STDIN and file 3 thru file ", OPEN_MAX, "\n" if $opt_v;
-	for ($i=3; $i < OPEN_MAX; ++$i) {
+	print "closing STDIN and file 3 thru file 256\n" if $opt_v;
+	for ($i=3; $i < 256; ++$i) {
 	    POSIX::close($i);
 	}
     }
