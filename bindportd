@@ -16,8 +16,8 @@
 #	proto	tcp or udp
 #	port	port number or port number:range or port name
 #
-# @(#) $Revision: 1.9 $
-# @(#) $Id: bindport,v 1.9 2000/02/13 03:07:17 root Exp chongo $
+# @(#) $Revision: 1.10 $
+# @(#) $Id: bindport,v 1.10 2000/03/10 17:53:54 chongo Exp chongo $
 # @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
@@ -119,6 +119,13 @@ my $usage = "usage:\n" .
 	    "\n" .
 	    "\tport numbers must be in the range [0,65535]\n";
 
+# function prototypes
+#
+sub sig_off();
+sub hold_port($$);
+sub bind_port($$$$$);
+
+
 MAIN:
 {
     my $proto_arg;	# protocol name ("tcp" or "udp")
@@ -170,7 +177,7 @@ MAIN:
     #
     if (defined $opt_s) {
 	print "ignoring almost all signals..." if defined $opt_v;
-	&sig_off();
+	sig_off();
 	print "\n" if defined $opt_v;
     }
 
@@ -217,7 +224,7 @@ MAIN:
 	    # hold each port in the range
 	    #
 	    for ($port = $low_port; $port <= $high_port; ++$port) {
-		push(@sock, &hold_port($proto_arg, $port));
+		push(@sock, hold_port($proto_arg, $port));
 	    }
 
 	# or hold a single port
@@ -227,7 +234,7 @@ MAIN:
 		print STDERR "$0: port number must in the range [0,65535]\n";
 		die $usage;
 	    }
-	    push(@sock, &hold_port($proto_arg, $port_arg));
+	    push(@sock, hold_port($proto_arg, $port_arg));
 	}
     }
 
@@ -273,7 +280,7 @@ sub sig_off()
 # hold_port - hold a port by binding to it
 #
 # usage:
-#	$s = &hold_port($proto_arg, $port);
+#	$s = hold_port($proto_arg, $port);
 #
 #	$proto_arg	protocol name ("tcp" or "udp")
 #	$port_arg	port number or name
@@ -283,7 +290,7 @@ sub sig_off()
 #
 # NOTE: The $proto_arg is used for error message output only.
 #
-sub hold_port()
+sub hold_port($$)
 {
     my ($proto_arg, $port_arg) = @_;		# get args
     my $type;		# socket type (SOCK_STREAM | SOCK_DGRAM)
@@ -332,7 +339,7 @@ sub hold_port()
 
     # bind to the port
     #
-    $s = &bind_port($type, $proto, $proto_arg, $port, $port_name);
+    $s = bind_port($type, $proto, $proto_arg, $port, $port_name);
     print "holding $proto_arg/$port_name\n" if defined $opt_v;
     return $s;
 }
@@ -341,7 +348,7 @@ sub hold_port()
 # bind_port - bind a port by binding to it
 #
 # usage:
-#	$s = &bind_port($type, $proto, $proto_arg, $port, $port_name);
+#	$s = bind_port($type, $proto, $proto_arg, $port, $port_name);
 #
 #	$type		socket type (SOCK_STREAM | SOCK_DGRAM)
 #	$proto		protocol number
@@ -354,7 +361,7 @@ sub hold_port()
 #
 # NOTE: The $proto_arg and $port_name are used for error message output only.
 #
-sub bind_port($$$)
+sub bind_port($$$$$)
 {
     my ($type, $proto, $proto_arg, $port, $port_name) = @_;	# get args
     my $s;	# socket object
