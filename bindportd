@@ -3,18 +3,19 @@
 # bindport - bind to tcp or udp ports
 #
 # usage:
-#	bindport [-b] [-v] [-w] proto/port ...
+#	bindport [-b] [-c] [-v] [-w] proto/port ...
 #
 #	-b	block all signals
+#	-c	pre-close all open files (except STDOUT/STDERR if also -v)
 #	-v	verbose
 #	-w	wait forever
 #
 #	proto	tcp or udp
-#	port	port number or name
+#	port	port number or port number-range or port name
 #
-# @(#) $Revision: 1.1 $
-# @(#) $Id: holdport.pl,v 1.1 2000/02/04 09:49:57 chongo Exp chongo $
-# @(#) $Source: /usr/local/src/etc/holdport/RCS/holdport.pl,v $
+# @(#) $Revision: 1.2 $
+# @(#) $Id: bindport.pl,v 1.2 2000/02/04 10:07:01 chongo Exp chongo $
+# @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport.pl,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -40,13 +41,59 @@
 #
 # Share and enjoy!
 
+# NOTE: Executing the following command:
+#
+#	bindport -b -c -w udp/1024-1043 udp/socks udp/2049 udp/5632 \
+#			  udp/31337 udp/31789 udp/31790 \
+#			  tcp/1024-1043 tcp/socks tcp/1114 tcp/1243 \
+#			  tcp/2000 tcp/2049 tcp/12345-12346 tcp/20033 &
+#
+# right after the network is started (see /etc/rc.d/init.d/network) is useful
+# as it grabs and holds on to ports that are often the subject of system
+# crackers and other network attacks.
+#
+# Even if you are behind router, packet filter or ipchain control where the
+# inbound and/or outbound packets to certain ports are blocked, system and
+# user applications may still try to bind to these ports.  If your application
+# is unlucky enough to pick one if these blocked ports, it will appear that
+# the network is dead or non-responsive.
+# 
+# Applications may try to bind to blocks ports perfect valid reasons. 
+# It is perfectly reasonable for a program to use almost any random unused 
+# privileged port.  In fact there are facilities where an application
+# will ask for any random, unprivileged and unused port on which to listen
+# or make connections.  Such applications have no way of knowing that the
+# router/packet filter/ipchain will block them.
+#
+# WARNING: The above port list may not be complete.  It may also contain
+#	   services that you want to use (such as socks).  Just the command
+#	   to suit your needs and current network attacks.
+
+# NOTE: To test if some ports are in use, try:
+#
+#	if bindport -c tcp/3000 udp/3000; then
+#	    echo ports not being used
+#	else
+#	    echo some of the ports are in use
+#	fi
+#
+# The program will exit 0 if it was able to bind and close all of the
+# ports successfully.  Otherwise it will exit non-zero.  By using -c,
+# one ensures that no error messages will be printed.  Of course, doing:
+#
+#	if bindport udp/23209 2>/dev/null; then echo it is free; fi
+#
+# will also work without forcing the pre-close of files.
+
+
 # requirements
 #
 use strict;
 use Socket;
 use IO::Socket;
 use Getopt::Std;
-use vars qw($opt_b $opt_v $opt_w);
+use POSIX;
+use vars qw($opt_b $opt_c $opt_v $opt_w);
 
 # my vars
 #
@@ -55,20 +102,23 @@ my @sock;	# socket objects
 my $tcp;	# tcp protocol number
 my $udp;	# udp protocol number
 #
-my $usage = "usage: $0 [-b] [-v] [-w] {tcp|udp}/{portnum|portname} ...\n";
+my $usage = "usage:\n" .
+	    "$0 [-b] [-c] [-v] [-w] " .
+	    "{tcp|udp}/{portnum|port-range|portname} ...\n" .
+	    "\n" .
+	    "\t-b\tblock all signals\n" .
+	    "\t-c\tpre-close all files (except STDOUT/STDERR if also -v)\n" .
+	    "\t-v\tverbose\n" .
+	    "\t-w\twait forever\n";
 
 MAIN:
 {
     my $proto_arg;	# protocol name ("tcp" or "udp")
-    my $proto;		# protocol number (tcp(6) or udp(17))
     my $port_arg;	# port name/number part of the arg
-    my $type;		# socket type (SOCK_STREAM | SOCK_DGRAM)
     my $i;
 
     # setup
     #
-    select STDOUT;
-    $| = 1;
     (undef, undef, $tcp) = getprotobyname("tcp");
     die "$0: cannot determine tcp protocol number\n" unless defined $tcp;
     (undef, undef, $udp) = getprotobyname("udp");
@@ -76,8 +126,32 @@ MAIN:
 
     # parse args
     #
-    if (!getopts('bvw') || !defined($ARGV[0])) {
+    if (!getopts('bcvw') || !defined($ARGV[0])) {
 	die $usage;
+    }
+    if (defined $opt_v) {
+	select STDOUT;
+	$| = 1;
+    }
+
+    # pre-close all files if requested
+    #
+    if (defined $opt_c) {
+
+	# pre-close the standard big 3 descriptors
+	#
+	# We do not close STDOUT and STDERR if we also were given -v
+	#
+	POSIX::close(0);
+	POSIX::close(1) unless defined $opt_v;
+	POSIX::close(2) unless defined $opt_v;
+
+	# close from 3 upward
+	#
+	print "closing STDIN and file 3 thru file ", OPEN_MAX, "\n" if $opt_v;
+	for ($i=3; $i < OPEN_MAX; ++$i) {
+	    POSIX::close($i);
+	}
     }
 
     # form sockets for each arg
@@ -93,23 +167,40 @@ MAIN:
 	$proto_arg = $1;
 	$port_arg = $2;
 	if (! defined($port_arg) || $port_arg eq "") {
-	    print STDERR "$0: $ARGV[$i]: must end with :portname or :portnum\n";
+	    print STDERR "$0: $ARGV[$i]: must end with ";
+	    print STDERR "/portname or /portnum or /port-range\n";
 	    die $usage;
 	}
 
-	# setup parameters based on TCP or UDP
+	# hold ports over a range
 	#
-	if ($proto_arg eq "tcp") {
-	    $proto = $tcp;
-	    $type = SOCK_STREAM;
-	} else {
-	    $proto = $udp;
-	    $type = SOCK_DGRAM;
-	}
+	if ($port_arg =~ m#^(\d+)\-(\d+)$#) {
 
-	# hold the port
+	    my $low_port;	# low port number of a range
+	    my $high_port;	# high port number of a range
+	    my $port;
+
+	    # inspect the range
+	    #
+	    if ($1 < $2) {
+		$low_port = $1;
+		$high_port = $2;
+	    } else {
+		$low_port = $2;
+		$high_port = $1;
+	    }
+
+	    # hold each port in the range
+	    #
+	    for ($port = $low_port; $port <= $high_port; ++$port) {
+		push(@sock, &hold_port($proto_arg, $port));
+	    }
+
+	# or hold a single port
 	#
-	push(@sock, &hold_port($type, $proto, $proto_arg, $port_arg));
+	} else {
+	    push(@sock, &hold_port($proto_arg, $port_arg));
+    	}
     }
 
     # turn off signals
@@ -150,10 +241,8 @@ sub sig_off()
 # hold_port - hold a port by binding to it
 #
 # usage:
-#	&hold_port($type, $proto, $proto_arg, $port);
+#	$s = &hold_port($proto_arg, $port);
 #
-#	$type		socket type (SOCK_STREAM | SOCK_DGRAM)
-#	$proto		protocol number (tcp(6) or udp(17))
 #	$proto_arg	protocol name ("tcp" or "udp")
 #	$port_arg	port number or name
 #
@@ -164,10 +253,24 @@ sub sig_off()
 #
 sub hold_port()
 {
-    my ($type, $proto, $proto_arg, $port_arg) = @_;		# get args 
+    my ($proto_arg, $port_arg) = @_;		# get args 
+    my $type;		# socket type (SOCK_STREAM | SOCK_DGRAM)
+    my $proto;		# protocol number (tcp(6) or udp(17))
     my $port_name;	# port name (number or name(number))
     my $port;		# port number
     my $s;		# socket object
+
+    # setup parameters based on TCP or UDP
+    #
+    if ($proto_arg eq "tcp") {
+	$proto = $tcp;
+	$type = SOCK_STREAM;
+    } elsif ($proto_arg eq "udp") {
+	$proto = $udp;
+	$type = SOCK_DGRAM;
+    } else {
+	die "$0: protocol name is not tcp or ucp\n";
+    }
 
     # determine port name(number)
     #
