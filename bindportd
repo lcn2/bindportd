@@ -3,11 +3,12 @@
 # bindport - bind to tcp or udp ports
 #
 # usage:
-#	bindport [-b] [-c] [-h] [-s] [-v] [-w] proto/port ...
+#	bindport [-b] [-c] [-h] [-i] [-s] [-v] [-w] proto/port ...
 #
 #	-b	run in background after binding to ports
 #	-c	pre-close all open files (except STDOUT/STDERR if also -v)
 #	-h	print a usage message
+#	-i	silently ignore binding to privileged ports (port <= 1023)
 #	-s	block all blockable signals
 #	-w	wait forever
 #	-v	verbose
@@ -15,8 +16,8 @@
 #	proto	tcp or udp
 #	port	port number or port number-range or port name
 #
-# @(#) $Revision: 1.5 $
-# @(#) $Id: bindport,v 1.5 2000/02/04 13:03:12 chongo Exp chongo $
+# @(#) $Revision: 1.6 $
+# @(#) $Id: bindport,v 1.6 2000/02/06 03:59:35 chongo Exp chongo $
 # @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
@@ -95,7 +96,7 @@ use Socket;
 use IO::Socket;
 use Getopt::Std;
 use POSIX;
-use vars qw($opt_b $opt_c $opt_h $opt_s $opt_v $opt_w);
+use vars qw($opt_b $opt_c $opt_h $opt_i $opt_s $opt_v $opt_w);
 
 # my vars
 #
@@ -105,12 +106,13 @@ my $tcp;	# tcp protocol number
 my $udp;	# udp protocol number
 #
 my $usage = "usage:\n" .
-	    "$0 [-b] [-c] [-h] [-s] [-v] [-w] " .
+	    "$0 [-b] [-c] [-h] [-i] [-s] [-v] [-w] " .
 	    "{tcp|udp}/{number|port-range|name} ...\n" .
 	    "\n" .
 	    "\t-b\trun in background after binding to all ports\n" .
 	    "\t-c\tpre-close all files (except STDOUT/STDERR if also -v)\n" .
 	    "\t-h\tprint this usage message\n" .
+	    "\t-i\tsilently ignore privileged ports (port <= 1023)" .
 	    "\t-s\tblock all blockable signals\n" .
 	    "\t-v\tverbose\n" .
 	    "\t-w\twait forever\n";
@@ -130,7 +132,7 @@ MAIN:
 
     # parse args
     #
-    if (!getopts('bchsvw') || !defined($ARGV[0])) {
+    if (!getopts('bchisvw') || !defined($ARGV[0])) {
 	die $usage;
     }
     if (defined $opt_h) {
@@ -240,7 +242,7 @@ MAIN:
     # all done
     #
     for ($i=0; $i < scalar(@sock); ++$i) {
-	$sock[$i]->close();
+	$sock[$i]->close() if defined $sock[$i];
     }
     exit(0);
 }
@@ -309,6 +311,13 @@ sub hold_port()
 	$port_name = "$port_name($port)";
     } else {
 	$port_name = "$port";
+    }
+
+    # if -i, then silently ignore prived ports <= 1023
+    #
+    if ($opt_i && $port <= 1023) {
+	print "ignoring $proto_arg/$port_name\n" if defined $opt_v;
+	return undef;
     }
 
     # bind to the port
