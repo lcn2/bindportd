@@ -13,9 +13,9 @@
 #	proto	tcp or udp
 #	port	port number or port number-range or port name
 #
-# @(#) $Revision: 1.2 $
-# @(#) $Id: bindport.pl,v 1.2 2000/02/04 10:07:01 chongo Exp chongo $
-# @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport.pl,v $
+# @(#) $Revision: 1.3 $
+# @(#) $Id: bindport,v 1.3 2000/02/04 11:28:40 chongo Exp chongo $
+# @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -46,7 +46,7 @@
 #	bindport -b -c -w udp/1024-1043 udp/socks udp/2049 udp/5632 \
 #			  udp/31337 udp/31789 udp/31790 \
 #			  tcp/1024-1043 tcp/socks tcp/1114 tcp/1243 \
-#			  tcp/2000 tcp/2049 tcp/12345-12346 tcp/20033 &
+#			  tcp/2000 tcp/2049 tcp/12345-12346 tcp/20034 &
 #
 # right after the network is started (see /etc/rc.d/init.d/network) is useful
 # as it grabs and holds on to ports that are often the subject of system
