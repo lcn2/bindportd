@@ -24,9 +24,9 @@
 #	proto	tcp, udp, reserve-tcp, reserve-udp
 #	port	port number
 #
-# @(#) $Revision: 1.13 $
-# @(#) $Id: bindport,v 1.13 2004/03/04 04:51:32 chongo Exp chongo $
-# @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
+# @(#) $Revision: 1.14 $
+# @(#) $Id: bindportd,v 1.14 2004/03/07 09:27:19 chongo Exp chongo $
+# @(#) $Source: /usr/local/src/etc/bindport/RCS/bindportd,v $
 #
 # Copyright (c) 2000-2004 by Landon Curt Noll.  All Rights Reserved.
 #
@@ -85,6 +85,7 @@
 # requirements
 #
 use strict;
+use bytes;
 use Socket;
 use IO::Socket;
 use IO::Handle;
