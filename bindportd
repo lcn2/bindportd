@@ -14,10 +14,10 @@
 #	-v	verbose
 #
 #	proto	tcp or udp
-#	port	port number or port number-range or port name
+#	port	port number or port number:range or port name
 #
-# @(#) $Revision: 1.6 $
-# @(#) $Id: bindport,v 1.6 2000/02/06 03:59:35 chongo Exp chongo $
+# @(#) $Revision: 1.7 $
+# @(#) $Id: bindport,v 1.7 2000/02/10 19:23:45 chongo Exp chongo $
 # @(#) $Source: /usr/local/src/etc/bindport/RCS/bindport,v $
 #
 # Copyright (c) 2000 by Landon Curt Noll.  All Rights Reserved.
@@ -46,9 +46,9 @@
 
 # NOTE: Executing the following command:
 #
-#	bindport -b -c -s -w udp/1024-1030 udp/socks udp/2049 udp/2140 \
+#	bindport -b -c -s -w udp/1024:1030 udp/socks udp/2049 udp/2140 \
 #			     udp/5632 udp/31337 udp/31789 udp/31790 udp/60000 \
-#			     tcp/1024-1030 tcp/socks tcp/1114 tcp/1243 \
+#			     tcp/1024:1030 tcp/socks tcp/1114 tcp/1243 \
 #			     tcp/2000 tcp/2049 tcp/12345-12346 tcp/20034
 #
 # right after the network is started (see /etc/rc.d/init.d/network) is useful
@@ -107,7 +107,7 @@ my $udp;	# udp protocol number
 #
 my $usage = "usage:\n" .
 	    "$0 [-b] [-c] [-h] [-i] [-s] [-v] [-w] " .
-	    "{tcp|udp}/{number|port-range|name} ...\n" .
+	    "{tcp|udp}/{number|port:range|name} ...\n" .
 	    "\n" .
 	    "\t-b\trun in background after binding to all ports\n" .
 	    "\t-c\tpre-close all files (except STDOUT/STDERR if also -v)\n" .
@@ -192,7 +192,7 @@ MAIN:
 
 	# hold ports over a range
 	#
-	if ($port_arg =~ m#^(\d+)\-(\d+)$#) {
+	if ($port_arg =~ m#^(\d+):(\d+)$#) {
 
 	    my $low_port;	# low port number of a range
 	    my $high_port;	# high port number of a range
