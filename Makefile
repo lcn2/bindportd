@@ -2,8 +2,8 @@
 #
 # bindportd - bind to tcp or udp ports
 #
-# @(#) $Revision: 1.2 $
-# @(#) $Id: Makefile,v 1.2 2004/03/07 09:27:19 chongo Exp root $
+# @(#) $Revision: 1.3 $
+# @(#) $Id: Makefile,v 1.3 2015/09/06 10:07:27 root Exp $
 # @(#) $Source: /usr/local/src/sbin/bindport/RCS/Makefile,v $
 #
 # Copyright (c) 2000,2012 by Landon Curt Noll.  All Rights Reserved.

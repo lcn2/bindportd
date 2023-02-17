@@ -1,0 +1,1167 @@
+#
+# bindport - tcp and udp ports to bind against
+#
+# @(#) $Revision: 1.1 $
+# @(#) $Id: bindport,v 1.1 2004/03/04 01:32:07 root Exp $
+# @(#) $Source: /etc/sysconfig/RCS/bindport,v $
+#
+# Copyright (c) 2004 by Landon Curt Noll. All Rights Reserved.
+#
+# Permission to use, copy, modify, and distribute this software and
+# its documentation for any purpose and without fee is hereby granted,
+# provided that the above copyright, this permission notice and text
+# this comment, and the disclaimer below appear in all of the following:
+#
+# supporting documentation
+# source copies
+# source works derived from this source
+# binaries derived from this source or from derived source
+#
+# LANDON CURT NOLL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+# INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO
+# EVENT SHALL LANDON CURT NOLL BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+# USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+# OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+# PERFORMANCE OF THIS SOFTWARE.
+#
+# chongo <was here> /\oo/\
+#
+# Share and enjoy!
+
+# We bind to certain tcp & udp ports with bindport right after the network
+# is started so that applications will not accidentally pick them. We use
+# the bindport tool grabs and holds on to ports that are often the subject
+# of system crackers and other network attacks.
+#
+# Even if you are behind router, packet filter or ipchain control where the
+# inbound and/or outbound packets to certain ports are blocked, system and
+# user applications may still try to bind to these ports. If your application
+# is unlucky enough to pick one if these blocked ports, it will appear that
+# the network is dead or non-responsive.
+#
+# Applications may try to bind to blocks ports perfect valid reasons.
+# It is perfectly reasonable for a program to use almost any random unused
+# privileged port. In fact there are facilities where an application
+# will ask for any random, unprivileged and unused port on which to listen
+# or make connections. Such applications have no way of knowing that the
+# router/packet filter/ipchain will block them.
+#
+# WARNING: The port list below may not be complete. It may also contain
+# services that you want to use. Adjust to suit your needs.
+
+#	There are a few services which I do allow connections from these
+#	ports. These are limited to services which I offer publically and
+#	which have been hardened / run in a protected chrooted zone. These
+#	include www (via Boa), https (via Apache), and smtp (via Postfix).
+#	I do this because legit users can, for example, connect to my web
+#	with a TCP/IP stream where the source post just happens to be a
+#	port number used by system crackers.
+#
+#	For most other services, I refuse connections from these ports.
+#	And of course, I refuse connections to these ports on my side. :-)
+
+# To make this look cleaner, sort the block below this comment using:
+#
+#	sort -t/ -n +1
+#
+tcp/0		# (new) REx
+udp/0		# UNIX OS probe
+udp/1		# (new) Sockets des Troie
+tcp/2		# (new) Death
+tcp/5		# (new) yoyo
+tcp/7		# echo exploit
+udp/7		# echo UDP exploit
+tcp/9		# discard exploit
+tcp/11		# (new) Skun
+tcp/15		# netstat exploit
+tcp/16		# (new) Skun
+tcp/17		# (new) Skun
+tcp/17		# quote of the day exploit
+tcp/18		# (new) Skun
+tcp/19		# (new) Skun
+tcp/19		# chargen exploit
+udp/19		# chargen UDP exploit
+reserve-tcp/20		# reserve for ftp use
+reserve-tcp/21		# reserve for ftp use
+reserve-tcp/22		# reserve for ssh use
+tcp/23		# (new) ADM worm, Aphex's Remote Packet Sniffer, AutoSpY
+tcp/23		# (new) ButtMan, Fire HacKer, My Very Own trojan, Pest, RTB 666
+tcp/23		# (new) Tiny Telnet Server - TTS, Truva Atl
+tcp/23		# telnet exploit
+reserve-tcp/25		# reserve for SMTP/EMail use
+tcp/27		# (new) Assasin
+tcp/28		# (new) Amanda
+tcp/30		# (new) Agent 40421
+tcp/31		# (new) Agent 40421, Skun, Master Paradise
+tcp/37		# (new) ADM worm
+tcp/39		# (new) SubSARI
+tcp/41		# (new) Deep Throat, Foreplay
+tcp/44		# (new) Arctic
+tcp/51		# (new) Fuck Lamers Backdoor
+tcp/52		# (new) MuSka52, Skun
+reserve-tcp/53		# reserve for bind/DNS use
+reserve-udp/53		# reserve for bind/DNS use
+tcp/54		# (new) MuSka52
+tcp/58		# Dmsetup cracker tool
+tcp/66		# (new) AL-Bareki
+tcp/69		# (new) BackGate Kit, Nimda, Pasana, Storm, Storm worm, Theef
+udp/69		# (new) Pasana
+udp/69		# tftp exploit
+tcp/70		# (new) ADM worm
+tcp/79		# (new) ADM worm, Firehotcker
+reserve-tcp/80		# reserve for HTTP/www use
+udp/80		# (new) Penrox
+tcp/81		# (new) Asylum
+tcp/87		# link exploit
+tcp/95		# supdup exploit
+tcp/99		# Hidden Port cracker tool
+tcp/101		# (new) Skun
+tcp/102		# (new) Delf, Skun
+tcp/103		# (new) Skun
+tcp/105		# (new) NerTe
+tcp/107		# (new) Skun
+tcp/109		# (new) ADM worm
+tcp/109		# pop-2 exploit
+tcp/110		# (new) ADM worm
+tcp/110		# pop-3 exploit
+tcp/111		# (new) ADM worm, MscanWorm
+tcp/111		# Sunrpc exploit
+udp/111		# Sunrpc exploit
+reserve-tcp/113		# reserve for doorbell use
+tcp/120		# (new) Skun
+tcp/121		# (new) Attack Bot, God Message, JammerKillah
+reserve-udp/123		# reserve for ntpd use
+tcp/123		# (new) Net Controller
+tcp/137		# (new) Chode, Nimda
+tcp/137		# netbios-ns exploit
+udp/137		# (new) Bugbear, Msinit, Opaserv, Qaz
+udp/137		# netbios-ns exploit
+tcp/138		# (new) Chode, Nimda
+tcp/138		# netbios-dgm exploit
+tcp/139		# (new) Chode, Fire HacKer, Msinit, Nimda, Opaserv, Qaz
+tcp/139		# netbios-ssn exploit
+udp/139		# netbios-dgm exploit
+tcp/143		# (new) ADM worm
+tcp/143		# imap exploit
+tcp/144		# NeWS exploit
+tcp/146		# (new) Infector
+udp/146		# (new) Infector
+udp/161		# snmp remote admin exploit
+udp/162		# snmp trap exploit
+tcp/166		# (new) NokNok
+tcp/170		# (new) A-trojan
+tcp/171		# (new) A-trojan
+udp/177		# XDM port exploit
+tcp/200		# (new) CyberSpy
+tcp/201		# (new) One Windows Trojan
+tcp/202		# (new) One Windows Trojan, Skun
+tcp/211		# (new) One Windows Trojan
+tcp/212		# (new) One Windows Trojan
+tcp/221		# (new) Snape
+tcp/222		# (new) NeuroticKat, Snape
+tcp/230		# (new) Skun
+tcp/231		# (new) Skun
+tcp/232		# (new) Skun
+tcp/285		# (new) Delf
+tcp/299		# (new) One Windows Trojan
+tcp/334		# (new) Backage
+tcp/335		# (new) Nautical
+reserve-tcp/351		# reserve for raw-ftp use
+reserve-tcp/353		# reserve for safetp use
+tcp/370		# (new) NeuroticKat
+tcp/400		# (new) Argentino
+tcp/401		# (new) One Windows Trojan
+tcp/402		# (new) One Windows Trojan
+tcp/411		# (new) Backage
+tcp/420		# (new) Breach
+tcp/421		# TCP Wrappers cracker tool
+reserve-tcp/443		# reserve for https/www use
+tcp/445		# (new) Nimda
+tcp/455		# (new) Fatal Connections
+tcp/456		# Hackers Paradise cracker tool
+tcp/511		# (new) T0rn Rootkit
+tcp/512		# exec exploit
+udp/512		# biff port exploit
+tcp/513		# (new) ADM worm
+tcp/513		# login exploit
+udp/513		# who port exploit
+reserve-udp/514		# reserve for syslog use
+tcp/514		# shell exploit
+tcp/515		# (new) MscanWorm, Ramen
+tcp/515		# printer exploit
+udp/520		# (new) A UDP backdoor
+udp/520		# routing tables exploit
+tcp/531		# Rasmin cracker tool
+tcp/555		# (new) 711 trojan (Seven Eleven), Phase Zero, Phase-0
+tcp/555		# Phase Zero Trojan / Stealth Spy cracker tool
+tcp/564		# (new) Oracle
+tcp/589		# (new) Assasin
+tcp/600		# (new) SweetHeart
+udp/600		# pcserver cracker tool
+tcp/623		# (new) RTB 666
+reserve-tcp/624		# reserve for cadmind use
+reserve-tcp/631		# reserve for cupsd use
+reserve-udp/631		# reserve for cupsd use
+tcp/635		# (new) ADM worm
+tcp/635		# mountd expliot
+udp/635		# mountd bug exploit
+tcp/650		# (new) Assasin
+tcp/661		# (new) NokNok
+tcp/666		# (new) Back Construction, NokNok
+tcp/666		# (new) Reverse Trojan, Shadow Phyre, Unicorn, yoyo
+tcp/666		# Trojan port / Bla, Attack FTP cracker tool
+tcp/667		# (new) NokNok, SniperNet
+tcp/668		# (new) Unicorn
+tcp/669		# (new) DP trojan, SniperNet
+tcp/680		# (new) RTB 666
+tcp/692		# (new) GayOL
+tcp/700		# (new) REx
+tcp/777		# (new) Undetected
+tcp/798		# (new) Oracle
+tcp/808		# (new) WinHole
+tcp/831		# (new) NeuroticKat
+tcp/901		# (new) Net-Devil, Pest
+tcp/902		# (new) Net-Devil, Pest
+tcp/903		# (new) Net-Devil
+tcp/911		# (new) Dark Shadow, Dark Shadow
+tcp/956		# (new) Crat Pro
+tcp/991		# (new) Snape
+tcp/992		# (new) Snape
+tcp/999		# (new) Deep Throat, Foreplay
+tcp/1000	# (new) Der Späher / Der Spaeher, Direct Connection
+tcp/1000	# (new) GOTHIC Intruder, Theef
+tcp/1001	# (new) Der Späher / Der Spaeher, GOTHIC Intruder, Lula
+tcp/1001	# (new) One Windows Trojan, Theef
+tcp/1001	# WebEx, DeepThroat cracker tool
+tcp/1005	# (new) Pest, Theef
+tcp/1008	# (new) AutoSpY, li0n
+tcp/1010	# (new) Doly Trojan
+tcp/1010	# Silencer cracker tool
+tcp/1011	# (new) Doly Trojan
+tcp/1012	# (new) Doly Trojan
+tcp/1015	# (new) Doly Trojan
+tcp/1016	# (new) Doly Trojan
+tcp/1020	# (new) Vampire
+tcp/1024	# (new) Latinus, Lithium, NetSpy, Ptakks
+tcp/1025	# (new) AcidkoR, BDDT, DataSpy Network X, Fraggle Rock, KiLo
+tcp/1025	# (new) MuSka52, NetSpy, Optix Pro, Paltalk, Ptakks, Real 2000
+tcp/1025	# (new) Remote Anything, Remote Explorer Y2K, Remote Storm
+tcp/1025	# (new) RemoteNC
+udp/1025	# (new) KiLo, Optix Pro , Ptakks, Real 2000, Remote Anything
+udp/1025	# (new) Remote Explorer Y2K, Remote Storm, Yajing
+tcp/1026	# (new) BDDT, Dark IRC, DataSpy Network X, Delta Remote Access
+tcp/1026	# (new) Dosh, Duddie, IRC Contact, Remote Explorer 2000
+tcp/1026	# (new) RUX The TIc.K
+udp/1026	# (new) Remote Explorer 2000
+tcp/1027	# (new) Clandestine, DataSpy Network X, KiLo, UandMe
+tcp/1028	# (new) DataSpy Network X, Dosh, Gibbon, KiLo, KWM, Litmus
+tcp/1028	# (new) Paltalk, SubSARI
+udp/1028	# (new) KiLo, SubSARI
+tcp/1029	# (new) Clandestine, KWM, Litmus, SubSARI
+udp/1029	# (new) SubSARI
+tcp/1030	# (new) Gibbon, KWM
+tcp/1031	# (new) KWM, Little Witch, Xanadu, Xot
+udp/1031	# (new) Xot
+tcp/1032	# (new) Akosch4, Dosh, KWM
+udp/1032	# (new) Akosch4
+tcp/1033	# (new) Dosh, KWM, Little Witch, Net Advance
+tcp/1034	# (new) KWM
+tcp/1035	# (new) Dosh, KWM, RemoteNC, Truva Atl
+tcp/1036	# (new) KWM
+tcp/1037	# (new) Arctic, Dosh, KWM, MoSucker
+tcp/1039	# (new) Dosh
+tcp/1041	# (new) Dosh, RemoteNC
+tcp/1042	# (new) BLA trojan
+udp/1042	# (new) BLA trojan
+tcp/1043	# (new) Dosh
+tcp/1044	# (new) Ptakks
+udp/1044	# (new) Ptakks
+tcp/1045	# RASmin cracker tool
+tcp/1047	# (new) RemoteNC
+tcp/1049	# (new) Delf, The Hobbit Daemon
+tcp/1052	# (new) Fire HacKer, Slapper, The Hobbit Daemon
+tcp/1053	# (new) The Thief
+tcp/1054	# (new) AckCmd, RemoteNC
+tcp/1080	# (new) SubSeven 2.2, WinHole
+tcp/1080 	# socks exploit
+tcp/1081	# (new) WinHole
+tcp/1082	# (new) WinHole
+tcp/1083	# (new) WinHole
+tcp/1090	# Extreme cracker tool
+tcp/1092	# (new) Hvl RAT
+tcp/1095	# (new) Blood Fest Evolution, Hvl RAT
+tcp/1095	# (new) Remote Administration Tool - RAT
+tcp/1097	# (new) Blood Fest Evolution, Hvl RAT
+tcp/1097	# (new) Remote Administration Tool - RAT
+tcp/1098	# (new) Blood Fest Evolution, Hvl RAT
+tcp/1098	# (new) Remote Administration Tool - RAT
+tcp/1099	# (new) Blood Fest Evolution, Hvl RAT
+tcp/1099	# (new) Remote Administration Tool - RAT
+udp/1104	# (new) RexxRave
+tcp/1111	# (new) Daodan, Ultors Trojan
+udp/1111	# (new) Daodan
+tcp/1114 	# SQL explot
+tcp/1115	# (new) Lurker, Protoss
+tcp/1116	# (new) Lurker
+udp/1116	# (new) Lurker
+tcp/1122	# (new) Last 2000, Singularity
+udp/1122	# (new) Last 2000, Singularity
+tcp/1133	# (new) SweetHeart
+tcp/1150	# (new) Orion
+tcp/1151	# (new) Orion
+tcp/1160	# (new) BlackRat
+tcp/1166	# (new) CrazzyNet
+tcp/1167	# (new) CrazzyNet
+tcp/1170	# (new) Psyber Stream Server, Voice
+tcp/1180	# (new) Unin68
+tcp/1183	# (new) Cyn, SweetHeart
+udp/1183	# (new) Cyn, SweetHeart
+udp/1200	# (new) NoBackO
+udp/1201	# (new) NoBackO
+tcp/1207	# (new) SoftWAR
+tcp/1208	# (new) Infector
+tcp/1212	# (new) Kaos
+tcp/1215	# (new) Force
+tcp/1218	# (new) Force
+tcp/1219	# (new) Force
+tcp/1221	# (new) Fuck Lamers Backdoor
+tcp/1222	# (new) Fuck Lamers Backdoor
+tcp/1234	# (new) KiLo, Ultors Trojan
+tcp/1243	# (new) BackDoor-G, SubSeven, Tiles
+tcp/1245	# (new) VooDoo Doll
+tcp/1255	# (new) Scarab
+tcp/1256	# (new) Project nEXT, RexxRave
+tcp/1269	# Mavericks Matrix cracker tool
+tcp/1272	# (new) The Matrix
+tcp/1313	# (new) NETrojan
+tcp/1314	# (new) Daodan
+tcp/1338	# Millennium worm backdoor port
+tcp/1349	# (new) BO dll
+udp/1349	# BO DLL cracker tool
+tcp/1369	# (new) SubSeven 2.2
+tcp/1386	# (new) Dagger
+tcp/1415	# (new) Last 2000, Singularity
+tcp/1433	# (new) Voyager Alpha Force
+tcp/1441	# (new) Remote Storm
+tcp/1492	# (new) FTP99CMP
+tcp/1509	# Psyber Streaming Server cracker tool
+tcp/1524	# (new) Trinoo
+udp/1524	# Ingreslock exploit
+tcp/1560	# (new) Big Gluck, Duddie
+udp/1561	# (new) MuSka52
+tcp/1600	# (new) Direct Connection
+tcp/1600	# Shivka-Burka cracker tool
+tcp/1601	# (new) Direct Connection
+tcp/1602	# (new) Direct Connection
+tcp/1703	# (new) Exploiter
+tcp/1711	# (new) yoyo
+tcp/1772	# (new) NetControle
+udp/1772	# (new) NetControle
+tcp/1777	# (new) Scarab
+tcp/1807	# SpySender cracker tool
+reserve-tcp/1812		# reserve for radiusd use
+reserve-tcp/1813		# reserve for radiusd use
+tcp/1826	# (new) Glacier
+tcp/1833	# (new) TCC
+tcp/1834	# (new) TCC
+tcp/1835	# (new) TCC
+tcp/1836	# (new) TCC
+tcp/1837	# (new) TCC
+tcp/1905	# (new) Delta Remote Access
+tcp/1911	# (new) Arctic
+tcp/1966	# (new) Fake FTP
+tcp/1967	# (new) For Your Eyes Only, WM FTP Server
+udp/1978	# (new) Slapper
+tcp/1981	# (new) Bowl, Shockrave
+tcp/1983	# (new) Q-taz
+tcp/1984	# (new) Intruzzo, Q-taz
+tcp/1985	# (new) Black Diver, Q-taz
+udp/1985	# (new) Black Diver
+tcp/1986	# (new) Akosch4
+tcp/1991	# (new) PitFall
+tcp/1999	# (new) Back Door, SubSeven, TransScout
+tcp/2000	# (new) A-trojan, Der Späher / Der Spaeher, Fear, Force
+tcp/2000	# (new) GOTHIC Intruder, Last 2000, Real 2000
+tcp/2000	# (new) Remote Explorer 2000, Remote Explorer Y2K
+tcp/2000	# (new) Senna Spy Trojan Generator, Singularity
+udp/2000	# (new) GOTHIC Intruder , Real 2000, Remote Explorer 2000
+udp/2000	# (new) Remote Explorer Y2K
+udp/2000	# OpenWindows exploit
+tcp/2001	# (new) Der Späher / Der Spaeher, Duddie, Glacier, Protoss
+tcp/2001	# (new) Senna Spy Trojan Generator, Singularity, Trojan Cow
+udp/2001	# (new) Scalper
+tcp/2002	# (new) Duddie, Senna Spy Trojan Generator, Sensive
+tcp/2002	# TransScout cracker tool
+udp/2002	# (new) Slapper
+tcp/2003	# TransScout cracker tool
+tcp/2004	# (new) Duddie
+tcp/2004	# TransScout cracker tool
+tcp/2005	# (new) Duddie
+tcp/2005	# TransScout cracker tool
+tcp/2023	# (new) Ripper Pro
+tcp/2049 	# NFS exploit
+udp/2049 	# NFS explot
+tcp/2060	# (new) Protoss
+tcp/2080	# (new) WinHole
+tcp/2101	# (new) SweetHeart
+tcp/2115	# (new) Bugs
+reserve-tcp/2123		# reserve for safetp use
+udp/2130	# (new) Mini BackLash
+tcp/2140	# (new) The Invasor
+tcp/2140	# DeepThoat keyboard sniffer cracker tool
+udp/2140	# (new) Deep Throat , Foreplay , The Invasor
+tcp/2149	# (new) Deep Throat
+tcp/2150	# (new) R0xr4t
+tcp/2155	# Illusion Mailer cracker tool
+tcp/2156	# (new) Oracle
+tcp/2222	# (new) SweetHeart, Way
+udp/2222	# (new) SweetHeart, Way
+tcp/2281	# (new) Nautical
+tcp/2283	# (new) Hvl RAT
+tcp/2300	# (new) Storm
+tcp/2311	# (new) Studio 54
+tcp/2330	# (new) IRC Contact
+tcp/2331	# (new) IRC Contact
+tcp/2332	# (new) IRC Contact, Silent Spy
+tcp/2333	# (new) IRC Contact
+tcp/2334	# (new) IRC Contact, Power
+tcp/2335	# (new) IRC Contact
+tcp/2336	# (new) IRC Contact
+tcp/2337	# (new) IRC Contact, The Hobbit Daemon
+tcp/2338	# (new) IRC Contact
+tcp/2339	# (new) IRC Contact, Voice Spy
+udp/2339	# (new) Voice Spy
+tcp/2343	# (new) Asylum
+tcp/2345	# (new) Doly Trojan
+tcp/2407	# (new) yoyo
+tcp/2418	# (new) Intruzzo
+tcp/2555	# (new) li0n, T0rn Rootkit
+tcp/2565	# (new) Striker trojan
+tcp/2583	# (new) WinCrash
+tcp/2589	# (new) Dagger
+tcp/2600	# (new) Digital RootBeer
+tcp/2702	# (new) Black Diver
+udp/2702	# (new) Black Diver
+tcp/2772	# (new) SubSeven
+tcp/2773	# (new) SubSeven, SubSeven 2.1 Gold
+tcp/2774	# (new) SubSeven, SubSeven 2.1 Gold
+tcp/2800	# (new) Theef
+tcp/2801	# Phineas Phucker cracker tool
+tcp/2929	# (new) Konik
+tcp/2983	# (new) Breach
+udp/2989	# (new) Remote Administration Tool - RAT
+udp/2989	# RAT cracker tool
+tcp/3000	# (new) InetSpy, Remote Shut, Theef
+tcp/3006	# (new) Clandestine
+tcp/3024	# (new) WinCrash
+tcp/3031	# (new) MicroSpy
+tcp/3119	# (new) Delta Remote Access
+tcp/3128	# (new) Reverse WWW Tunnel Backdoor, RingZero
+tcp/3129	# (new) Masters Paradise
+tcp/3131	# (new) SubSARI
+tcp/3150	# (new) Deep Throat, The Invasor, The Invasor
+udp/3150	# (new) Deep Throat , Foreplay , Mini BackLash
+tcp/3215	# (new) XHX
+udp/3215	# (new) XHX
+tcp/3292	# (new) Xposure
+tcp/3295	# (new) Xposure
+reserve-tcp/3306		# reserve for mysqld use
+tcp/3333	# (new) Daodan
+udp/3333	# (new) Daodan
+tcp/3410	# (new) Optix Pro
+tcp/3417	# (new) Xposure
+tcp/3418	# (new) Xposure
+tcp/3456	# (new) Fear, Force, Terror trojan
+tcp/3459	# (new) Eclipse 2000, Sanctuary
+tcp/3505	# (new) AutoSpY
+tcp/3700	# (new) Portal of Doom
+tcp/3721	# (new) Whirlpool
+tcp/3723	# (new) Mantis
+tcp/3777	# (new) PsychWard
+tcp/3791	# (new) Total Solar Eclypse
+tcp/3800	# (new) Total Solar Eclypse
+tcp/3801	# (new) Total Solar Eclypse
+udp/3801	# Eclypse cracker tool
+tcp/3945	# (new) Delta Remote Access
+tcp/3996	# (new) Remote Anything
+udp/3996	# (new) Remote Anything
+tcp/3997	# (new) Remote Anything
+tcp/3999	# (new) Remote Anything
+tcp/4000	# (new) Remote Anything, SkyDance
+tcp/4092	# (new) WinCrash
+tcp/4128	# (new) RedShad
+udp/4128	# (new) RedShad
+udp/4156	# (new) Slapper
+tcp/4201	# (new) War trojan
+tcp/4210	# (new) Netkey
+tcp/4211	# (new) Netkey
+tcp/4225	# (new) Silent Spy
+tcp/4242	# (new) Virtual Hacking Machine - VHM
+tcp/4315	# (new) Power
+tcp/4321	# (new) BoBo
+tcp/4414	# (new) AL-Bareki
+tcp/4442	# (new) Oracle
+tcp/4444	# (new) CrackDown, Oracle, Prosiak, Swift Remote
+tcp/4445	# (new) Oracle
+tcp/4447	# (new) Oracle
+tcp/4449	# (new) Oracle
+tcp/4451	# (new) Oracle
+tcp/4488	# (new) Event Horizon
+tcp/4567	# (new) File Nail
+tcp/4590	# ICQTrojan cracker tool
+tcp/4653	# (new) Cero
+tcp/4666	# (new) Mneah
+tcp/4700	# (new) Theef
+tcp/4836	# (new) Power
+tcp/5000	# (new) Back Door Setup, Bubbel, Ra1d, Sockets des Troie
+tcp/5001	# (new) Back Door Setup, Sockets des Troie
+tcp/5002	# (new) Shaft
+tcp/5005	# (new) Aladino
+tcp/5011	# (new) Peanut Brittle
+tcp/5011	# One of the Last Trojans (OOTLT) cracker tool
+tcp/5025	# (new) WM Remote KeyLogger
+tcp/5031	# (new) Net Metropolitan
+tcp/5032	# (new) Net Metropolitan
+tcp/5050	# (new) R0xr4t
+tcp/5135	# (new) Bmail
+tcp/5150	# (new) Pizza
+tcp/5151	# (new) Optix Lite
+tcp/5152	# (new) Laphex
+tcp/5155	# (new) Oracle
+tcp/5221	# (new) NOSecure
+tcp/5250	# (new) Pizza
+tcp/5321	# (new) Firehotcker
+tcp/5333	# (new) Backage
+tcp/5350	# (new) Pizza
+tcp/5377	# (new) Iani
+tcp/5400	# (new) Back Construction, Blade Runner, Digital Spy
+tcp/5401	# (new) Back Construction, Blade Runner, Digital Spy, Mneah
+tcp/5402	# (new) Back Construction, Blade Runner, Digital Spy, Mneah
+tcp/5418	# (new) DarkSky
+tcp/5419	# (new) DarkSky
+udp/5419	# (new) DarkSky
+tcp/5430	# (new) Net Advance
+tcp/5450	# (new) Pizza
+tcp/5503	# (new) Remote Shell
+tcp/5512	# Illusion Mailer cracker tool
+tcp/5534	# (new) The Flu
+tcp/5550	# (new) Pizza
+tcp/5550	# Xtcp cracker tool
+tcp/5555	# (new) Daodan, NoXcape
+tcp/5555	# ServeMe cracker tool
+udp/5555	# (new) Daodan
+tcp/5556	# (new) BO Facil
+tcp/5557	# (new) BO Facil
+tcp/5569	# (new) Robo-Hack
+tcp/5631	# PC Anywhere exploit
+udp/5632	# PC Anywhere exploit
+tcp/5650	# (new) Pizza
+tcp/5669	# (new) SpArTa
+tcp/5679	# (new) Nautical
+tcp/5695	# (new) Assasin
+tcp/5696	# (new) Assasin
+tcp/5697	# (new) Assasin
+tcp/5742	# (new) WinCrash
+tcp/5802	# (new) Y3K RAT
+tcp/5873	# (new) SubSeven 2.2
+tcp/5880	# (new) Y3K RAT
+tcp/5882	# (new) Y3K RAT
+udp/5882	# (new) Y3K RAT
+tcp/5888	# (new) Y3K RAT
+udp/5888	# (new) Y3K RAT
+tcp/5889	# (new) Y3K RAT
+tcp/5933	# (new) NOSecure
+reserve-tcp/6000		# reserve for X use
+reserve-tcp/6001		# reserve for X use
+reserve-tcp/6002		# reserve for X use
+reserve-tcp/6003		# reserve for X use
+reserve-tcp/6004		# reserve for X use
+reserve-tcp/6005		# reserve for X use
+reserve-tcp/6006		# reserve for X use
+reserve-tcp/6007		# reserve for X use
+reserve-tcp/6008		# reserve for X use
+reserve-tcp/6009		# reserve for X use
+reserve-tcp/6010		# reserve for X use
+reserve-tcp/6011		# reserve for X use
+reserve-tcp/6012		# reserve for X use
+reserve-tcp/6013		# reserve for X use
+reserve-tcp/6014		# reserve for X use
+reserve-tcp/6015		# reserve for X use
+reserve-tcp/6016		# reserve for X use
+reserve-tcp/6017		# reserve for X use
+reserve-tcp/6018		# reserve for X use
+reserve-tcp/6019		# reserve for X use
+reserve-tcp/6020		# reserve for X use
+reserve-tcp/6021		# reserve for X use
+reserve-tcp/6022		# reserve for X use
+reserve-tcp/6023		# reserve for X use
+reserve-tcp/6024		# reserve for X use
+reserve-tcp/6025		# reserve for X use
+reserve-tcp/6026		# reserve for X use
+reserve-tcp/6027		# reserve for X use
+reserve-tcp/6028		# reserve for X use
+reserve-tcp/6029		# reserve for X use
+reserve-tcp/6030		# reserve for X use
+reserve-tcp/6031		# reserve for X use
+reserve-tcp/6032		# reserve for X use
+reserve-tcp/6033		# reserve for X use
+reserve-tcp/6034		# reserve for X use
+reserve-tcp/6035		# reserve for X use
+reserve-tcp/6036		# reserve for X use
+reserve-tcp/6037		# reserve for X use
+reserve-tcp/6038		# reserve for X use
+reserve-tcp/6039		# reserve for X use
+reserve-tcp/6040		# reserve for X use
+reserve-tcp/6041		# reserve for X use
+reserve-tcp/6042		# reserve for X use
+reserve-tcp/6043		# reserve for X use
+reserve-tcp/6044		# reserve for X use
+reserve-tcp/6045		# reserve for X use
+reserve-tcp/6046		# reserve for X use
+reserve-tcp/6047		# reserve for X use
+reserve-tcp/6048		# reserve for X use
+reserve-tcp/6049		# reserve for X use
+reserve-tcp/6050		# reserve for X use
+reserve-tcp/6051		# reserve for X use
+reserve-tcp/6052		# reserve for X use
+reserve-tcp/6053		# reserve for X use
+reserve-tcp/6054		# reserve for X use
+reserve-tcp/6055		# reserve for X use
+reserve-tcp/6056		# reserve for X use
+reserve-tcp/6057		# reserve for X use
+reserve-tcp/6058		# reserve for X use
+reserve-tcp/6059		# reserve for X use
+reserve-tcp/6060		# reserve for X use
+reserve-tcp/6061		# reserve for X use
+reserve-tcp/6062		# reserve for X use
+reserve-tcp/6063		# reserve for X use
+tcp/6267	# (new) DarkSky
+tcp/6400	# (new) The Thing
+tcp/6521	# (new) Oracle
+tcp/6526	# (new) Glacier
+tcp/6556	# (new) AutoSpY
+tcp/6661	# (new) Weia-Meia
+tcp/6666	# (new) AL-Bareki, KiLo, SpArTa
+udp/6666	# (new) KiLo
+tcp/6667	# (new) Acropolis, BlackRat, Dark FTP, Dark IRC
+tcp/6667	# (new) DataSpy Network X, Gunsan, InCommand, Kaitex, KiLo
+tcp/6667	# (new) Laocoon, Net-Devil, Reverse Trojan, ScheduleAgent
+tcp/6667	# (new) SlackBot, SubSeven, Subseven 2.1.4 DefCon 8, Trinity
+tcp/6667	# (new) Y3K RAT, yoyo
+udp/6667	# (new) KiLo
+tcp/6669	# (new) Host Control, Vampire, Voyager Alpha Force
+tcp/6670	# (new) BackWeb Server, Deep Throat, Foreplay, WinNuke eXtreame
+tcp/6697	# (new) Force
+tcp/6711	# (new) BackDoor-G, Duddie, KiLo, Little Witch, Netkey
+tcp/6711	# (new) Spadeace, SubSARI, SubSeven, SweetHeart, UandMe, Way
+tcp/6711	# (new) VP Killer
+tcp/6712	# (new) Funny trojan, KiLo, Spadeace, SubSeven
+tcp/6713	# (new) KiLo, SubSeven
+tcp/6714	# (new) KiLo
+tcp/6715	# (new) KiLo
+tcp/6718	# (new) KiLo
+tcp/6723	# (new) Mstream
+tcp/6766	# (new) KiLo
+udp/6766	# (new) KiLo
+tcp/6767	# (new) KiLo, Pasana, UandMe
+udp/6767	# (new) KiLo, UandMe
+tcp/6771	# (new) Deep Throat, Foreplay
+tcp/6776	# (new) 2000 Cracks, BackDoor-G, SubSeven, VP Killer
+udp/6838	# (new) Mstream
+tcp/6891	# (new) Force
+tcp/6912	# (new) Shit Heep
+tcp/6912	# Shit Heep cracker tool
+tcp/6939	# Indoctrination cracker tool
+tcp/6969	# (new) 2000 Cracks, BlitzNet, Dark IRC, GateCrasher
+tcp/6969	# (new) Kid Terror, Laphex, Net Controller, SpArTa, Vagr Nocker
+tcp/6970	# (new) GateCrasher
+tcp/7000	# (new) Aladino, Gunsan, Remote Grab, SubSeven
+tcp/7000	# (new) SubSeven 2.1 Gold, Theef
+tcp/7000	# Remote Grab, Kazimas cracker tool
+tcp/7001	# (new) Freak88, Freak2k
+tcp/7007	# (new) Silent Spy
+tcp/7020	# (new) Basic Hell
+tcp/7030	# (new) Basic Hell
+tcp/7119	# (new) Massaker
+tcp/7215	# (new) SubSeven, SubSeven 2.1 Gold
+tcp/7274	# (new) AutoSpY
+tcp/7290	# (new) NOSecure
+tcp/7291	# (new) NOSecure
+tcp/7300	# (new) NetSpy
+tcp/7301	# (new) NetSpy
+tcp/7306	# (new) NetSpy
+tcp/7307	# (new) NetSpy, Remote Process Monitor
+tcp/7308	# (new) NetSpy, X Spy
+tcp/7312	# (new) Yajing
+tcp/7410	# (new) Phoenix II
+tcp/7424	# (new) Host Control
+udp/7424	# (new) Host Control
+tcp/7597	# (new) Qaz
+tcp/7626	# (new) Glacier
+tcp/7648	# (new) XHX
+tcp/7673	# (new) Neoturk
+tcp/7676	# (new) Neoturk
+tcp/7677	# (new) Neoturk
+tcp/7718	# (new) Glacier
+tcp/7722	# (new) KiLo
+tcp/7777	# (new) God Message
+udp/7777	# Cable modem control port exploit
+tcp/7788	# (new) Last 2000, Last 2000, Singularity
+udp/7788	# (new) Singularity
+tcp/7789	# (new) Back Door Setup
+tcp/7800	# (new) Paltalk
+tcp/7826	# (new) Oblivion
+tcp/7850	# (new) Paltalk
+tcp/7878	# (new) Paltalk
+tcp/7879	# (new) Paltalk
+tcp/7979	# (new) Vagr Nocker
+udp/7983	# (new) Mstream
+reserve-tcp/8008		# reserve for syswww/local-html use
+tcp/8011	# (new) Way
+tcp/8012	# (new) Ptakks
+udp/8012	# (new) Ptakks
+tcp/8080	# (new) Reverse WWW Tunnel Backdoor, RingZero, Screen Cutter
+tcp/8090	# (new) Aphex's Remote Packet Sniffer
+udp/8090	# (new) Aphex's Remote Packet Sniffer
+tcp/8097	# (new) Kryptonic Ghost Command Pro
+tcp/8100	# (new) Back streets
+tcp/8110	# (new) DLP
+tcp/8111	# (new) DLP
+tcp/8127	# (new) 9_119, Chonker
+udp/8127	# (new) 9_119, Chonker
+tcp/8130	# (new) 9_119, Chonker, DLP
+tcp/8131	# (new) DLP
+tcp/8301	# (new) DLP
+tcp/8302	# (new) DLP
+tcp/8311	# (new) SweetHeart
+tcp/8322	# (new) DLP
+tcp/8329	# (new) DLP
+udp/8488	# (new) KiLo
+tcp/8489	# (new) KiLo
+udp/8489	# (new) KiLo
+tcp/8685	# (new) Unin68
+tcp/8732	# (new) Kryptonic Ghost Command Pro
+tcp/8734	# (new) AutoSpY
+tcp/8787	# (new) Back Orifice 2000
+tcp/8811	# (new) Fear
+tcp/8812	# (new) FraggleRock Lite
+tcp/8821	# (new) Alicia
+tcp/8848	# (new) Whirlpool
+tcp/8864	# (new) Whirlpool
+tcp/8888	# (new) Dark IRC
+tcp/9000	# (new) Netministrator
+tcp/9090	# (new) Aphex's Remote Packet Sniffer
+tcp/9117	# (new) Massaker
+tcp/9148	# (new) Nautical
+tcp/9301	# (new) DLP
+udp/9325	# (new) Mstream
+tcp/9329	# (new) DLP
+tcp/9400	# (new) InCommand
+tcp/9401	# (new) InCommand
+tcp/9536	# (new) Lula
+tcp/9561	# (new) Crat Pro
+tcp/9563	# (new) Crat Pro
+tcp/9870	# (new) Remote Computer Control Center
+tcp/9872	# (new) Portal of Doom
+tcp/9873	# (new) Portal of Doom
+tcp/9874	# (new) Portal of Doom
+tcp/9875	# (new) Portal of Doom
+tcp/9876	# (new) Rux
+tcp/9876	# Cyber Attacker cracker tool
+tcp/9877	# (new) Small Big Brother
+tcp/9878	# (new) Small Big Brother, TransScout
+tcp/9879	# (new) Small Big Brother
+tcp/9919	# (new) Kryptonic Ghost Command Pro
+reserve-tcp/9941		# reserve for ssh use
+tcp/9989	# iNi-Killer cracker tool
+tcp/9989	# iNi-Killer cracker tool
+reserve-tcp/9999		# reserve for ser2net use
+reserve-tcp/10000		# reserve for ser2net use
+udp/10000	# (new) XHX
+reserve-tcp/10001		# reserve for ser2net use
+tcp/10002	# (new) Lula
+tcp/10003	# (new) Lula
+tcp/10008	# (new) li0n
+tcp/10012	# (new) Amanda
+tcp/10013	# (new) Amanda
+tcp/10067	# (new) Portal of Doom
+udp/10067	# (new) Portal of Doom
+tcp/10084	# (new) Syphillis
+udp/10084	# (new) Syphillis
+tcp/10085	# (new) Syphillis
+tcp/10086	# (new) Syphillis
+tcp/10100	# (new) Control Total, GiFt trojan, Scalper
+udp/10100	# (new) Slapper
+tcp/10101	# BrainSpy cracker tool
+tcp/10167	# (new) Portal of Doom
+udp/10167	# (new) Portal of Doom
+udp/10498	# (new) Mstream
+tcp/10520	# (new) Acid Shivers
+tcp/10528	# (new) Host Control
+tcp/10607	# (new) Coma
+udp/10666	# (new) Ambush
+tcp/10752	# mountd expliot
+tcp/10887	# (new) BDDT
+tcp/10889	# (new) BDDT
+tcp/11000	# (new) DataRape, Senna Spy Trojan Generator
+tcp/11011	# (new) Amanda
+tcp/11050	# (new) Host Control
+tcp/11051	# (new) Host Control
+tcp/11111	# (new) Breach
+tcp/11223	# (new) Progenic trojan, Secret Agent
+tcp/11225	# (new) Cyn
+udp/11225	# (new) Cyn
+tcp/11660	# (new) Back streets
+tcp/11718	# (new) Kryptonic Ghost Command Pro
+tcp/11831	# (new) DarkFace, DataRape, Latinus, Pest, Vagr Nocker
+tcp/11977	# (new) Cool Remote Control
+tcp/11978	# (new) Cool Remote Control
+tcp/11980	# (new) Cool Remote Control
+tcp/12000	# (new) Reverse Trojan
+tcp/12076	# Gjamer cracker tool
+tcp/12223	# Hack´99 KeyLogger cracker tool
+tcp/12310	# (new) PreCursor
+tcp/12321	# (new) Protoss
+udp/12321	# (new) Protoss
+tcp/12345	# (new) Ashley, BlueIce 2000, Mypic, NetBus, Pie Bill Gates
+tcp/12345	# (new) Q-taz, Sensive, Snape, Vagr Nocker, ValvNet, Whack Job
+tcp/12345	# NetBus cracker tool
+udp/12345	# (new) BlueIce 2000
+tcp/12346	# (new) NetBus
+tcp/12346	# GabanBus, X-bill cracker tool
+tcp/12348	# (new) BioNet
+tcp/12349	# (new) BioNet, The Saint
+tcp/12361	# (new) Whack-a-mole
+tcp/12362	# (new) Whack-a-mole
+tcp/12363	# (new) Whack-a-mole
+tcp/12623	# (new) ButtMan
+udp/12623	# (new) ButtMan, DUN Control
+tcp/12624	# (new) ButtMan, Power
+tcp/12631	# (new) Whack Job
+tcp/12684	# (new) Power
+tcp/12754	# (new) Mstream
+tcp/12904	# (new) Rocks
+tcp/13000	# (new) Senna Spy Trojan Generator, Senna Spy Trojan Generator
+tcp/13013	# (new) PsychWard
+tcp/13014	# (new) PsychWard
+tcp/13028	# (new) Back streets
+tcp/13079	# (new) Kryptonic Ghost Command Pro
+tcp/13370	# (new) SpArTa
+tcp/13371	# (new) Optix Pro
+tcp/13500	# (new) Theef
+tcp/13753	# (new) Anal FTP
+tcp/14194	# (new) CyberSpy
+tcp/14285	# (new) Laocoon
+tcp/14286	# (new) Laocoon
+tcp/14287	# (new) Laocoon
+tcp/14500	# (new) PC Invader
+tcp/14501	# (new) PC Invader
+tcp/14502	# (new) PC Invader
+tcp/14503	# (new) PC Invader
+tcp/15000	# (new) In Route to the Hell, R0xr4t
+tcp/15092	# (new) Host Control
+tcp/15104	# (new) Mstream
+tcp/15206	# (new) KiLo
+tcp/15207	# (new) KiLo
+udp/15210	# (new) UDP remote shell backdoor server
+tcp/15382	# (new) SubZero
+tcp/15432	# (new) Cyn
+tcp/15485	# (new) KiLo
+tcp/15486	# (new) KiLo
+udp/15486	# (new) KiLo
+tcp/15500	# (new) In Route to the Hell
+tcp/15512	# (new) Iani
+tcp/15551	# (new) In Route to the Hell
+tcp/15695	# (new) Kryptonic Ghost Command Pro
+udp/15845	# (new) KiLo
+tcp/15852	# (new) Kryptonic Ghost Command Pro
+tcp/16057	# (new) MoonPie
+tcp/16484	# (new) MoSucker
+tcp/16514	# (new) KiLo
+udp/16514	# (new) KiLo
+tcp/16515	# (new) KiLo
+udp/16515	# (new) KiLo
+tcp/16523	# (new) Back streets
+tcp/16660	# (new) Stacheldraht
+tcp/16712	# (new) KiLo
+tcp/16761	# (new) Kryptonic Ghost Command Pro
+tcp/16959	# (new) SubSeven, Subseven 2.1.4 DefCon 8
+tcp/17027	# Conducent adbot cracker tool
+tcp/17166	# (new) Mosaic
+tcp/17300	# Kuang2 The Virus cracker tool
+tcp/17449	# (new) Kid Terror
+tcp/17499	# (new) CrazzyNet
+tcp/17500	# (new) CrazzyNet
+tcp/17569	# (new) Infector
+tcp/17593	# (new) AudioDoor
+tcp/17777	# (new) Nephron
+udp/18753	# (new) Shaft
+tcp/19191	# (new) BlueFire
+tcp/19216	# (new) BackGate Kit
+tcp/20000	# (new) Millenium, PSYcho Files, XHX
+tcp/20001	# (new) Insect, Millenium, PSYcho Files
+tcp/20002	# (new) AcidkoR, PSYcho Files
+tcp/20005	# (new) MoSucker
+tcp/20023	# (new) VP Killer
+tcp/20034	# (new) NetBus 2.0 Pro, NetBus 2.0 Pro Hidden, Whack Job
+tcp/20203	# Logged cracker tool
+tcp/20331	# (new) BLA trojan
+tcp/20432	# (new) Shaft
+udp/20433	# (new) Shaft
+tcp/21212	# (new) Sensive
+tcp/21544	# (new) GirlFriend, Kid Terror
+tcp/21554	# (new) Exploiter, FreddyK, Kid Terror, Schwindler, Sensive
+tcp/21554	# (new) Winsp00fer
+tcp/21554	# GirlFriend cracker tool
+tcp/21579	# (new) Breach
+reserve-tcp/21701		# reserve for private use
+reserve-udp/21701		# reserve for private use
+reserve-tcp/21702		# reserve for private use
+reserve-udp/21702		# reserve for private use
+reserve-tcp/21703		# reserve for private use
+reserve-udp/21703		# reserve for private use
+tcp/21957	# (new) Latinus
+tcp/22115	# (new) Cyn
+tcp/22222	# (new) Donald Dick, G.R.O.B., Prosiak, Ruler, RUX The TIc.K
+tcp/22223	# (new) RUX The TIc.K
+tcp/22456	# (new) Clandestine
+tcp/22554	# (new) Schwindler
+tcp/22783	# (new) Intruzzo
+tcp/22784	# (new) Intruzzo
+tcp/22785	# (new) Intruzzo
+tcp/23000	# (new) Storm worm
+tcp/23001	# (new) Storm worm
+tcp/23005	# (new) NetTrash, Oxon
+tcp/23006	# (new) NetTrash, Oxon
+tcp/23023	# (new) Logged
+tcp/23032	# (new) Amanda
+reserve-tcp/23209		# reserve for private use
+reserve-udp/23209		# reserve for private use
+reserve-tcp/23210		# reserve for private use
+reserve-tcp/23210		# reserve for private use
+reserve-udp/23211		# reserve for private use
+reserve-udp/23211		# reserve for private use
+tcp/23321	# (new) Konik
+tcp/23432	# (new) Asylum
+tcp/23456	# (new) Clandestine, Evil FTP, Vagr Nocker, Whack Job
+tcp/23476	# (new) Donald Dick
+udp/23476	# (new) Donald Dick
+tcp/23477	# (new) Donald Dick
+tcp/23777	# (new) InetSpy
+tcp/24000	# (new) Infector
+tcp/24289	# (new) Latinus
+tcp/25002	# (new) MOTD
+udp/25002	# (new) MOTD
+tcp/25123	# (new) Goy'Z TroJan
+tcp/25555	# (new) FreddyK
+tcp/25685	# (new) MoonPie
+tcp/25686	# (new) DarkFace, MoonPie
+tcp/25799	# (new) FreddyK
+tcp/25885	# (new) MOTD
+tcp/25982	# (new) DarkFace, MoonPie
+tcp/26274	# Delta Source cracker tool
+udp/26274	# (new) Delta Source
+tcp/26681	# (new) Voice Spy
+tcp/27160	# (new) MoonPie
+tcp/27184	# (new) Alvgus trojan 2000
+udp/27184	# (new) Alvgus trojan 2000
+tcp/27373	# (new) Charge
+tcp/27374	# (new) Bad Blood, Fake SubSeven, li0n, Ramen, Seeker, SubSeven
+tcp/27374	# (new) SubSeven 2.1 Gold, Subseven 2.1.4 DefCon 8
+tcp/27374	# (new) SubSeven 2.2, SubSeven Muie, The Saint
+tcp/27379	# (new) Optix Lite
+udp/27444	# (new) Trinoo
+tcp/27573	# (new) SubSeven
+tcp/27665	# (new) Trinoo
+tcp/28218	# (new) Oracle
+tcp/28431	# (new) Hack´a´Tack
+tcp/28678	# (new) Exploiter
+tcp/29104	# (new) NETrojan, NetTrojan
+tcp/29292	# (new) BackGate Kit
+tcp/29559	# (new) AntiLamer BackDoor, DarkFace, DataRape, Ducktoy
+tcp/29559	# (new) Latinus, Pest, Vagr Nocker
+tcp/29589	# (new) KiLo
+udp/29589	# (new) KiLo
+tcp/29891	# (new) The Unexplained
+udp/29891	# The Unexplained cracker tool
+tcp/29999	# (new) AntiLamer BackDoor
+tcp/30000	# (new) DataRape, Infector
+tcp/30001	# (new) Err0r32
+tcp/30005	# (new) Litmus
+tcp/30029	# AOL Trojan cracker tool
+tcp/30100	# (new) NetSphere
+tcp/30101	# (new) NetSphere
+tcp/30102	# (new) NetSphere
+tcp/30103	# (new) NetSphere
+udp/30103	# (new) NetSphere
+tcp/30133	# (new) NetSphere
+tcp/30303	# (new) Sockets des Troie
+tcp/30331	# (new) MuSka52
+tcp/30464	# (new) Slapper
+tcp/30700	# (new) Mantis
+tcp/30947	# (new) Intruse
+tcp/30999	# Kuang2 cracker tool
+tcp/31320	# (new) Little Witch
+udp/31320	# (new) Little Witch
+tcp/31335	# (new) Trinoo
+udp/31335 	# Trinoo cracker tool
+tcp/31336	# (new) Butt Funnel
+tcp/31336	# Bo Whack cracker tool
+tcp/31337	# (new) ADM worm, Back Fire, Back Orifice (Lm)
+tcp/31337	# (new) Back Orifice russian, BlitzNet, BO client, BO Facil
+tcp/31337	# (new) Facil, BO2, Freak88, Freak2k, NoBackO
+udp/31337	# (new) Back Orifice, Deep BO
+tcp/31338	# (new) Back Orifice, Butt Funnel, NetSpy (DK)
+udp/31338	# (new) Deep BO, NetSpy (DK)
+tcp/31339	# (new) Little Witch, NetSpy (DK), NetSpy (DK)
+udp/31339	# (new) Little Witch
+tcp/31340	# (new) Little Witch
+udp/31340	# (new) Little Witch
+tcp/31382	# (new) Lithium
+tcp/31415	# (new) Lithium
+tcp/31416	# (new) Lithium
+udp/31416	# (new) Lithium
+tcp/31557	# (new) Xanadu
+tcp/31666	# BOWhack cracker tool
+tcp/31745	# (new) BuschTrommel
+tcp/31785	# (new) Hack´a´Tack
+tcp/31787	# (new) Hack´a´Tack
+tcp/31788	# (new) Hack´a´Tack
+tcp/31789	# (new) Hack´a´Tack
+udp/31789	# (new) Hack´a´Tack
+tcp/31790	# (new) Hack´a´Tack
+tcp/31791	# (new) Hack´a´Tack
+udp/31791	# (new) Hack´a´Tack
+tcp/31792	# (new) Hack´a´Tack
+tcp/31887	# (new) BDDT
+tcp/32000	# (new) BDDT
+tcp/32001	# (new) Donald Dick
+tcp/32100	# (new) Peanut Brittle, Project nEXT
+tcp/32418	# (new) Acid Battery
+udp/32771	# portmapper alternate service port exploit
+tcp/32791	# (new) Acropolis, Rocks
+tcp/33270	# (new) Trinity
+tcp/33333	# (new) Prosiak
+tcp/33545	# (new) G.R.O.B.
+tcp/33567	# (new) li0n, T0rn Rootkit
+tcp/33568	# (new) li0n, T0rn Rootkit
+tcp/33577	# (new) Son of PsychWard
+tcp/33777	# (new) Son of PsychWard
+tcp/33911	# (new) Spirit 2000, Spirit 2001
+tcp/34312	# (new) Delf
+tcp/34313	# (new) Delf
+tcp/34324	# (new) Big Gluck
+tcp/34343	# (new) Osiris
+tcp/34444	# (new) Donald Dick
+udp/34555	# (new) Trinoo (for Windows)
+tcp/35000	# (new) Infector
+udp/35555	# (new) Trinoo (for Windows)
+tcp/35600	# (new) SubSARI
+tcp/36794	# (new) Bugbear
+tcp/37237	# (new) Mantis
+tcp/37651	# (new) Charge
+tcp/38741	# (new) CyberSpy
+tcp/38742	# (new) CyberSpy
+tcp/40071	# (new) Ducktoy
+tcp/40308	# (new) SubSARI
+tcp/40412	# (new) The Spy
+tcp/40421	# (new) Agent 40421, Masters Paradise
+tcp/40422	# (new) Masters Paradise
+tcp/40423	# (new) Masters Paradise
+tcp/40425	# (new) Masters Paradise
+tcp/40426	# (new) Masters Paradise
+tcp/41337	# (new) Storm
+udp/41503	# inoculan tool cracker tool
+tcp/41666	# (new) Remote Boot Tool, Remote Boot Tool
+udp/43720	# (new) KiLo
+tcp/44014	# (new) Iani
+udp/44014	# (new) Iani
+tcp/44444	# (new) Prosiak
+reserve-tcp/44497		# reserve for private use
+reserve-udp/44497		# reserve for private use
+reserve-tcp/44498		# reserve for private use
+reserve-udp/44498		# reserve for private use
+reserve-tcp/44499		# reserve for private use
+reserve-udp/44499		# reserve for private use
+tcp/44575	# (new) Exploiter
+tcp/44767	# (new) School Bus
+udp/44767	# (new) School Bus
+tcp/45092	# (new) BackGate Kit
+tcp/45454	# (new) Osiris
+tcp/45632	# (new) Little Witch
+tcp/45673	# (new) Acropolis, Rocks
+tcp/46666	# (new) Taskman
+udp/46666	# (new) Taskman
+tcp/47017	# (new) T0rn Rootkit
+udp/47262	# (new) Delta Source
+tcp/47698	# (new) KiLo
+tcp/47785	# (new) KiLo
+udp/47785	# (new) KiLo
+tcp/47891	# (new) AntiLamer BackDoor
+tcp/48004	# (new) Fraggle Rock
+tcp/48006	# (new) Fraggle Rock
+tcp/48512	# (new) Arctic
+tcp/49000	# (new) Fraggle Rock
+tcp/49683	# (new) Fenster
+udp/49683	# (new) Fenster
+udp/49698	# (new) KiLo
+tcp/50000	# (new) SubSARI
+tcp/50021	# (new) Optix Pro
+tcp/50130	# (new) Enterprise
+tcp/50505	# (new) Sockets des Troie
+tcp/50551	# (new) R0xr4t
+tcp/50552	# (new) R0xr4t
+tcp/50766	# (new) Schwindler
+tcp/50829	# (new) KiLo
+udp/50829	# (new) KiLo
+tcp/51234	# (new) Cyn
+tcp/51966	# (new) Cafeini
+tcp/52365	# (new) Way
+udp/52901	# (new) Omega
+tcp/53001	# (new) Remote Windows Shutdown - RWS
+tcp/54283	# (new) SubSeven, SubSeven 2.1 Gold
+tcp/54320	# (new) Back Orifice 2000
+tcp/54321	# (new) Back Orifice 2000, School Bus, yoyo
+tcp/55165	# (new) File Manager trojan, File Manager trojan
+tcp/55555	# (new) Shadow Phyre
+tcp/55665	# (new) Latinus, Pinochet
+tcp/55666	# (new) Latinus, Pinochet
+tcp/56565	# (new) Osiris
+tcp/57163	# (new) BlackRat
+tcp/57341	# (new) NetRaider
+tcp/57785	# (new) G.R.O.B.
+tcp/58134	# (new) Charge
+tcp/58202	# ssh root kit cracker tool (found by sc)
+tcp/58339	# (new) Butt Funnel
+tcp/59211	# (new) Ducktoy
+tcp/60000	# (new) Deep Throat, Foreplay, Sockets des Troie
+tcp/60001	# (new) Trinity
+tcp/60008	# (new) li0n, T0rn Rootkit
+tcp/60068	# (new) The Thing
+tcp/60411	# (new) Connection
+tcp/60551	# (new) R0xr4t
+tcp/60552	# (new) R0xr4t
+tcp/60666	# (new) Basic Hell
+tcp/61115	# (new) Protoss
+tcp/61337	# (new) Nota
+tcp/61348	# (new) Bunker-Hill
+tcp/61440	# (new) Orion
+tcp/61603	# (new) Bunker-Hill
+tcp/61746	# (new) KiLo
+udp/61746	# (new) KiLo
+tcp/61747	# (new) KiLo
+udp/61747	# (new) KiLo
+udp/61748	# (new) KiLo
+tcp/61979	# (new) Cool Remote Control
+tcp/62011	# (new) Ducktoy
+tcp/63485	# (new) Bunker-Hill
+tcp/64101	# (new) Taskman
+tcp/65000	# (new) Devil, Sockets des Troie, Stacheldraht
+tcp/65289	# (new) yoyo
+tcp/65421	# (new) Alicia
+tcp/65422	# (new) Alicia
+tcp/65432	# (new) The Traitor (= th3tr41t0r)
+udp/65432	# (new) The Traitor (= th3tr41t0r)
+tcp/65530	# (new) Windows Mite
+tcp/65535	# (new) RC1 trojan

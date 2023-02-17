@@ -24,9 +24,9 @@
 #	proto	tcp, udp, reserve-tcp, reserve-udp
 #	port	port number
 #
-# @(#) $Revision: 1.14 $
-# @(#) $Id: bindportd,v 1.14 2004/03/07 09:27:19 chongo Exp chongo $
-# @(#) $Source: /usr/local/src/etc/bindport/RCS/bindportd,v $
+# @(#) $Revision: 1.15 $
+# @(#) $Id: bindportd,v 1.15 2004/05/21 14:37:44 chongo Exp $
+# @(#) $Source: /usr/local/src/sbin/bindport/RCS/bindportd,v $
 #
 # Copyright (c) 2000-2004 by Landon Curt Noll.  All Rights Reserved.
 #

@@ -1,0 +1,78 @@
+#!/bin/sh
+#
+# bindportd	Bind to certain TCP and UDP ports using bindport to prevent 
+#	        accidental use of ports that are subject to system crackers
+#
+# chkconfig: 2345 11 89
+# description: bindport port blocker
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+# setup
+BINDPORT="/usr/local/etc/bindportd"
+BIND_FILE="/etc/sysconfig/bindport"
+
+# If no rules or progs, do nothing
+[ -x "$BINDPORT" ] || exit 0
+
+# get the ports to block
+if [ ! -f "$BIND_FILE" ]; then
+    echo "$0: cannot find bindport config file: $BIND_FILE" 1>&2
+    failure "bindport -"
+    echo
+    exit 1
+fi
+
+# See how we were called.
+case "$1" in
+  start|restart|reload)
+	/usr/bin/killall -q -0 bindportd >/dev/null 2>&1
+	RETVAL=$?
+	if [ "$RETVAL" -eq 0 ]; then
+	    echo -n "Stopping old bindport: "
+	    /usr/bin/killall -q -9 bindportd >/dev/null 2>&1 
+	    RETVAL=$?
+	    if [ "$RETVAL" -eq 0 ]; then
+		success "Pre-stopping bindport -"
+	    else
+		failure "Pre-stopping bindport -"
+	    fi
+	    echo
+	fi
+        echo -n "Starting bindport: "
+	daemon $BINDPORT -s "$BIND_FILE"
+	echo
+        [ $RETVAL -eq 0 ] && touch /var/lock/subsys/bindport
+        ;;
+  stop)
+	echo -n "Shutting down bindport: "
+	/usr/bin/killall -q -0 bindportd >/dev/null 2>&1
+	RETVAL=$?
+	if [ "$RETVAL" -eq 0 ]; then
+	    /usr/bin/killall -q -9 bindportd >/dev/null 2>&1 
+	    RETVAL=$?
+	    if [ "$RETVAL" -eq 0 ]; then
+		success "Stopping bindport -"
+	    else
+		failure "Stopping bindport -"
+	    fi
+	else
+	    passed "No bindport found -"
+	    RETVAL=0
+	fi
+        echo
+        [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/bindport
+        ;;
+  status)
+        echo -n "Checking bindport: "
+	/usr/bin/killall -q -0 bindportd >/dev/null 2>&1
+	RETVAL=$?
+        echo
+	;;
+  *)
+        echo "Usage: $0 {start|stop|reload|status}"
+        exit 1
+esac
+
+exit $RETVAL
