@@ -1,4 +1,4 @@
-#!/bin/make
+#!/usr/bin/env make
 #
 # bindportd - bind to tcp or udp ports
 #
