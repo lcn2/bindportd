@@ -2,11 +2,7 @@
 #
 # bindportd - bind to tcp or udp ports
 #
-# @(#) $Revision: 1.3 $
-# @(#) $Id: Makefile,v 1.3 2015/09/06 10:07:27 root Exp $
-# @(#) $Source: /usr/local/src/sbin/bindport/RCS/Makefile,v $
-#
-# Copyright (c) 2000,2012 by Landon Curt Noll.  All Rights Reserved.
+# Copyright (c) 2000,2012,2023 by Landon Curt Noll.  All Rights Reserved.
 #
 # Permission to use, copy, modify, and distribute this software and
 # its documentation for any purpose and without fee is hereby granted,
@@ -31,13 +27,14 @@
 # Share and enjoy!
 
 
-SHELL= /bin/sh
+SHELL= bash
 DESTDIR= /usr/local/sbin
+INSTALL= install
 
 all: bindportd
 
 install: all
-	install -m 0555 bindportd ${DESTDIR}
+	${INSTALL} -m 0555 bindportd ${DESTDIR}
 
 clean:
 clobber:
