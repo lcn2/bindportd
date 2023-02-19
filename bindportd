@@ -1,4 +1,4 @@
-#!/usr/bin/perl -wT
+#!/usr/bin/env perl
 #
 # bindportd - bind to tcp or udp ports
 #
@@ -24,11 +24,7 @@
 #	proto	tcp, udp, reserve-tcp, reserve-udp
 #	port	port number
 #
-# @(#) $Revision: 1.15 $
-# @(#) $Id: bindportd,v 1.15 2004/05/21 14:37:44 chongo Exp $
-# @(#) $Source: /usr/local/src/sbin/bindport/RCS/bindportd,v $
-#
-# Copyright (c) 2000-2004 by Landon Curt Noll.  All Rights Reserved.
+# Copyright (c) 2000-2004,2023 by Landon Curt Noll.  All Rights Reserved.
 #
 # Permission to use, copy, modify, and distribute this software and
 # its documentation for any purpose and without fee is hereby granted,
@@ -163,7 +159,7 @@ MAIN:
 	exit 0;
     }
     if (defined($opt_m)) {
-    	if ($opt_m < 1) {
+	if ($opt_m < 1) {
 	    die "max ports must be > 0\n";
 	} else {
 	    $max_ports = $opt_m;
@@ -184,7 +180,7 @@ MAIN:
     $ignored_udp = 0;
     while (defined($line = <BINDPORT>)) {
 
-    	# ignore off comments and whitespace
+	# ignore off comments and whitespace
 	#
 	++$i;
 	chomp($line);
