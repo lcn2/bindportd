@@ -24,7 +24,7 @@
 #	proto	tcp, udp, reserve-tcp, reserve-udp
 #	port	port number
 #
-# Copyright (c) 2000-2004,2023 by Landon Curt Noll.  All Rights Reserved.
+# Copyright (c) 2000-2004,2023,2025 by Landon Curt Noll.  All Rights Reserved.
 #
 # Permission to use, copy, modify, and distribute this software and
 # its documentation for any purpose and without fee is hereby granted,
@@ -52,7 +52,7 @@
 #
 #	bindportd -i -s /etc/sysconfig/bindport
 #
-# right after the network is started (see /etc/rc.d/init.d/network) is useful
+# right after the network is started is useful
 # as it grabs and holds on to ports that are often the subject of system
 # crackers and other network attacks.
 #
@@ -85,17 +85,23 @@ use bytes;
 use Socket;
 use IO::Socket;
 use IO::Handle;
-use Getopt::Std;
+use Getopt::Long qw(:config no_ignore_case);
+use File::Basename;
 use POSIX;
-use vars qw($opt_b $opt_c $opt_h $opt_i $opt_s $opt_v $opt_w $opt_m);
+use vars qw($opt_b $opt_c $opt_h $opt_i $opt_s $opt_v $opt_V $opt_w $opt_m);
+
+# version
+#
+my $VERSION = "1.0.0 2025-03-22";
 
 # my vars
 #
 my @sock;	# socket objects
 my $max_ports;	# max number of ports to bind per child
+my $NAME = basename($0);
 #
 my $usage = "usage:\n" .
-	"$0 [-b] [-c] [-h] [-i] [-m maxport] [-s] [-v] [-w] portset" .
+	"$NAME [-b] [-c] [-h] [-i] [-m maxport] [-s] [-v] [-V] [-w] portset" .
 	"\n" .
 	"\t-b\t(option ignored, always forks in background)\n" .
 	"\t-c\tclose open files after startup (except STDOUT/STDERR if -v)\n" .
@@ -104,6 +110,7 @@ my $usage = "usage:\n" .
 	"\t-m\tmax ports per child (default: 1000)\n" .
 	"\t-s\tblock all blockable signals\n" .
 	"\t-v\tverbose\n" .
+	"\t-V\tprint version and exit\n" .
 	"\t-w\t(ignored, forked children always wait forever after binding)\n" .
 	"\n" .
 	"    portset is a file containing lines of the form:\n" .
@@ -116,7 +123,20 @@ my $usage = "usage:\n" .
 	"\treserve-udp/portnum\t# comment ignored\n" .
 	"\treserve-tcp/portnum\t# comment ignored\n" .
 	"\twhere portnum is an integer [0,65535]\n" .
-	"\tonly udp/portnum and tcp/portnum lines result in port binding\n";
+	"\tonly udp/portnum and tcp/portnum lines result in port binding\n" .
+	"\n" .
+	"$NAME version: $VERSION\n";
+my %optctl = (
+    "b" => \$opt_b,
+    "c" => \$opt_c,
+    "h" => \$opt_h,
+    "i" => \$opt_i,
+    "m=i" => \$opt_m,
+    "s" => \$opt_s,
+    "v" => \$opt_v,
+    "V" => \$opt_V,
+    "w" => \$opt_w
+);
 
 # function prototypes
 #
@@ -147,17 +167,26 @@ MAIN:
     # setup
     #
     $max_ports = 1000;	# most Linux systems can open 1024 files per process
+    $opt_b = 0;
 
     # parse args
     #
-    if (!getopts('bchim:svw') || !defined($ARGV[0]) || defined($ARGV[1])) {
+    if (!GetOptions(%optctl)) {
 	die $usage;
     }
-    $cfgfile = $ARGV[0];
     if (defined $opt_h) {
 	print $usage;
 	exit 0;
     }
+    if (defined $opt_V) {
+	print "$VERSION\n";
+	exit 0;
+    }
+    if (!defined($ARGV[0]) || defined($ARGV[1])) {
+	print $usage;
+	exit 0;
+    }
+    $cfgfile = $ARGV[0];
     if (defined($opt_m)) {
 	if ($opt_m < 1) {
 	    die "max ports must be > 0\n";
