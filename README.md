@@ -36,10 +36,10 @@ sudo make install
 ```
 
 
-# To use
+# Examle
 
-```sh
-/usr/local/sbin/bindport -c portset.example
+```
+$ /usr/local/sbin/bindport -c portset.example
 ```
 
 NOTE: The `portset.example` is just an example **portset** file.
@@ -53,14 +53,15 @@ Just the command to suit your needs and current network attacks.
 Also consider:
 
 ```sh
-/usr/local/sbin/bindport -c -i -s portset
+$ /usr/local/sbin/bindport -c -i -s portset
 ```
 
 
-# Usage
+# To use
 
 ```
-bindportd [-b] [-c] [-h] [-i] [-m maxport] [-s] [-v] [-V] [-w] portset
+/usr/local/bin/bindportd [-b] [-c] [-h] [-i] [-m maxport] [-s] [-v] [-V] [-w] portset
+
 	-b	(option ignored, always forks in background)
 	-c	close open files after startup (except STDOUT/STDERR if -v)
 	-h	print this usage message
